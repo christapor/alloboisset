@@ -15,7 +15,7 @@ export default function App() {
   const [dateTrajet, setDateTrajet] = useState('');
   const [heureTrajet, setHeureTrajet] = useState('');
 
-  const VERSION = "1.13"; // Nouvelle version lisibilité
+  const VERSION = "1.14"; 
 
   useEffect(() => {
     const savedUser = localStorage.getItem('user_boisset');
@@ -99,51 +99,8 @@ export default function App() {
 
         {view === 'nouveau' && (
           <div className="space-y-4">
-            <button onClick={() => setView('trajets')} className="bg-white border-4 border-[#4A86B4] text-[#4A86B4] px-5 py-3 rounded-xl font-black flex items-center gap-2 text-xl uppercase shadow-md active:scale-95 transition-transform"><ArrowLeft size={28} /> RETOUR</button>
+            <button onClick={() => setView('trajets')} className="bg-white border-[6px] border-[#4A86B4] text-[#4A86B4] px-5 py-3 rounded-xl font-black flex items-center gap-2 text-xl uppercase shadow-xl active:scale-95 transition-transform"><ArrowLeft size={32} /> RETOUR</button>
             <div className="bg-white/95 p-6 rounded-3xl shadow-lg space-y-4 border-2 border-[#5B8C4E]">
               <h2 className="text-xl font-black text-center uppercase text-[#5B8C4E]">Nouveau trajet</h2>
               <input type="text" value={depart} onChange={(e)=>setDepart(e.target.value)} className="w-full p-4 border-2 rounded-xl font-bold" />
-              <input type="text" placeholder="Destination ?" value={arrivee} onChange={(e)=>setArrivee(e.target.value)} className="w-full p-4 border-2 rounded-xl font-bold" />
-              <div className="grid grid-cols-2 gap-2 text-center">
-                <div className="space-y-1"><label className="text-xs font-bold uppercase">Date</label><input type="date" value={dateTrajet} onChange={(e)=>setDateTrajet(e.target.value)} className="w-full p-2 border-2 rounded-xl font-bold text-sm" /></div>
-                <div className="space-y-1"><label className="text-xs font-bold uppercase">Heure</label><input type="time" value={heureTrajet} onChange={(e)=>setHeureTrajet(e.target.value)} className="w-full p-2 border-2 rounded-xl font-bold text-sm" /></div>
-              </div>
-              <button onClick={publierTrajet} className="w-full bg-[#5B8C4E] text-white p-5 rounded-2xl font-black text-xl uppercase shadow-lg">Publier</button>
-            </div>
-          </div>
-        )}
-
-        {view === 'liste' && (
-          <div className="space-y-4">
-            <button onClick={() => setView('trajets')} className="bg-white border-4 border-[#4A86B4] text-[#4A86B4] px-5 py-3 rounded-xl font-black flex items-center gap-2 text-xl uppercase shadow-md active:scale-95 transition-transform"><ArrowLeft size={28} /> RETOUR</button>
-            <h2 className="text-2xl font-black uppercase">Trajets prévus</h2>
-            {trajets.length === 0 ? <p className="text-center p-12 italic bg-white/50 rounded-3xl">Aucun trajet pour l'instant.</p> : 
-              trajets.map(t => (
-                <div key={t.id} className="bg-white p-5 rounded-[2rem] shadow-md border-l-8 border-[#4A86B4]">
-                  <div className="flex justify-between items-start mb-2">
-                    <p className="font-black text-[#5B8C4E] text-xl uppercase leading-none">{t.origin} ➔ {t.destination}</p>
-                    {t.driver_id === currentUser?.telephone && <button onClick={() => supprimerTrajet(t.id)} className="text-red-500 bg-red-50 p-2 rounded-full"><Trash2 size={24}/></button>}
-                  </div>
-                  <div className="flex gap-4 text-lg font-black text-gray-600 mb-4">
-                    <span>{formatMaDate(t.departure_time.split(' ')[0])}</span>
-                    <span>{t.departure_time.split(' ')[1]}</span>
-                  </div>
-                  <a href={`tel:${t.driver_id}`} className="block w-full bg-[#4A86B4] text-white p-4 rounded-xl font-black text-2xl text-center uppercase shadow-md flex items-center justify-center gap-3"><Phone size={24}/> Appeler</a>
-                </div>
-              ))
-            }
-          </div>
-        )}
-
-        {view === 'parametres' && (
-          <div className="space-y-2 px-2">
-            <div className="bg-white/95 p-4 rounded-3xl shadow-xl border-4 border-[#4A86B4] text-center space-y-2">
-              <div className="flex items-center justify-center gap-4">
-                <div className="w-12 h-12 bg-[#4A86B4] rounded-full flex items-center justify-center text-white"><User size={26} /></div>
-                <div className="text-left">
-                  <h2 className="text-lg font-black uppercase leading-none">{currentUser?.nom}</h2>
-                  <p className="text-md font-black text-[#4A86B4]">{currentUser?.telephone}</p>
-                </div>
-              </div>
-              {!confirmLogout ? (
-                <button onClick={() => setConfirmLogout(true)} className="w-full border-2 border-red-500 text-red-500 p-2 rounded-xl font-black uppercase text-[12px
+              <input type="text" placeholder="Destination ?" value={arrivee
