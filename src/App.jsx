@@ -15,7 +15,7 @@ export default function App() {
   const [dateTrajet, setDateTrajet] = useState('');
   const [heureTrajet, setHeureTrajet] = useState('');
 
-  const VERSION = "1.11";
+  const VERSION = "1.12"; // Mise à jour de la version
 
   useEffect(() => {
     const savedUser = localStorage.getItem('user_boisset');
@@ -99,7 +99,9 @@ export default function App() {
 
         {view === 'nouveau' && (
           <div className="space-y-4">
-            <button onClick={() => setView('trajets')} className="font-black text-[#4A86B4] flex items-center gap-2 text-lg uppercase"><ArrowLeft /> Retour</button>
+            <button onClick={() => setView('trajets')} className="bg-white border-4 border-[#4A86B4] text-[#4A86B4] px-4 py-2 rounded-xl font-black flex items-center gap-2 text-lg uppercase shadow-md active:scale-95 transition-transform">
+              <ArrowLeft size={24} /> RETOUR
+            </button>
             <div className="bg-white/95 p-6 rounded-3xl shadow-lg space-y-4 border-2 border-[#5B8C4E]">
               <h2 className="text-xl font-black text-center uppercase text-[#5B8C4E]">Nouveau trajet</h2>
               <input type="text" value={depart} onChange={(e)=>setDepart(e.target.value)} className="w-full p-4 border-2 rounded-xl font-bold" />
@@ -115,7 +117,9 @@ export default function App() {
 
         {view === 'liste' && (
           <div className="space-y-4">
-            <button onClick={() => setView('trajets')} className="font-black text-[#4A86B4] flex items-center gap-2 text-lg uppercase"><ArrowLeft /> Retour</button>
+            <button onClick={() => setView('trajets')} className="bg-white border-4 border-[#4A86B4] text-[#4A86B4] px-4 py-2 rounded-xl font-black flex items-center gap-2 text-lg uppercase shadow-md active:scale-95 transition-transform">
+              <ArrowLeft size={24} /> RETOUR
+            </button>
             <h2 className="text-2xl font-black uppercase">Trajets prévus</h2>
             {trajets.length === 0 ? <p className="text-center p-12 italic bg-white/50 rounded-3xl">Aucun trajet pour l'instant.</p> : 
               trajets.map(t => (
@@ -162,14 +166,22 @@ export default function App() {
               )}
             </div>
 
-            <div className="bg-white/90 p-5 rounded-3xl border-2 border-[#5B8C4E] space-y-2">
-              <h3 className="font-black text-[#5B8C4E] flex items-center gap-2 uppercase text-sm"><ShieldCheck size={20}/> Infos Sécurité</h3>
-              <p className="text-[12px] font-bold leading-snug text-gray-800">Cette application est un outil solidaire local. Aucune donnée n'est revendue. Vos informations servent uniquement à vous mettre en relation avec les autres habitants de Boisset.</p>
+            {/* BLOC MODE D'EMPLOI AJOUTÉ ICI */}
+            <div className="bg-white/95 p-5 rounded-3xl border-4 border-[#5B8C4E] shadow-lg space-y-2">
+              <h3 className="font-black text-[#5B8C4E] flex items-center gap-2 uppercase text-sm"><Info size={20}/> Astuce : Modifier un trajet</h3>
+              <p className="text-[12px] font-bold leading-snug text-gray-800 italic">
+                En attendant la mise à jour, pour modifier un trajet, il vous suffit de supprimer l'ancien et d'en créer un nouveau. C'est simple et rapide !
+              </p>
+            </div>
+
+            <div className="bg-white/90 p-5 rounded-3xl border-2 border-gray-300 space-y-2">
+              <h3 className="font-black text-gray-600 flex items-center gap-2 uppercase text-sm"><ShieldCheck size={20}/> Infos Sécurité</h3>
+              <p className="text-[12px] font-bold leading-snug text-gray-800">Cette application est un outil solidaire local. Aucune donnée n'est revendue. Vos informations servent uniquement à la mise en relation.</p>
             </div>
 
             <div className="bg-white p-4 rounded-2xl border-4 border-[#4A86B4] text-center shadow-md">
               <p className="text-lg font-black text-[#4A86B4] uppercase leading-none">VERSION {VERSION}</p>
-              <p className="text-[11px] font-black text-[#4A86B4] uppercase mt-1 whitespace-nowrap">Gracieusement propulsé par Chris TAPOR</p>
+              <p className="text-[11px] font-black text-[#4A86B4] uppercase mt-1">Gracieusement propulsé par Chris TAPOR</p>
             </div>
           </div>
         )}
