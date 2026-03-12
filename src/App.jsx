@@ -15,7 +15,7 @@ export default function App() {
   const [dateTrajet, setDateTrajet] = useState('');
   const [heureTrajet, setHeureTrajet] = useState('');
 
-  const VERSION = "1.12"; // Mise à jour de la version
+  const VERSION = "1.13";
 
   useEffect(() => {
     const savedUser = localStorage.getItem('user_boisset');
@@ -99,9 +99,7 @@ export default function App() {
 
         {view === 'nouveau' && (
           <div className="space-y-4">
-            <button onClick={() => setView('trajets')} className="bg-white border-4 border-[#4A86B4] text-[#4A86B4] px-4 py-2 rounded-xl font-black flex items-center gap-2 text-lg uppercase shadow-md active:scale-95 transition-transform">
-              <ArrowLeft size={24} /> RETOUR
-            </button>
+            <button onClick={() => setView('trajets')} className="bg-white border-4 border-[#4A86B4] text-[#4A86B4] px-4 py-2 rounded-xl font-black flex items-center gap-2 text-lg uppercase shadow-md active:scale-95 transition-transform"><ArrowLeft size={24} /> RETOUR</button>
             <div className="bg-white/95 p-6 rounded-3xl shadow-lg space-y-4 border-2 border-[#5B8C4E]">
               <h2 className="text-xl font-black text-center uppercase text-[#5B8C4E]">Nouveau trajet</h2>
               <input type="text" value={depart} onChange={(e)=>setDepart(e.target.value)} className="w-full p-4 border-2 rounded-xl font-bold" />
@@ -117,9 +115,7 @@ export default function App() {
 
         {view === 'liste' && (
           <div className="space-y-4">
-            <button onClick={() => setView('trajets')} className="bg-white border-4 border-[#4A86B4] text-[#4A86B4] px-4 py-2 rounded-xl font-black flex items-center gap-2 text-lg uppercase shadow-md active:scale-95 transition-transform">
-              <ArrowLeft size={24} /> RETOUR
-            </button>
+            <button onClick={() => setView('trajets')} className="bg-white border-4 border-[#4A86B4] text-[#4A86B4] px-4 py-2 rounded-xl font-black flex items-center gap-2 text-lg uppercase shadow-md active:scale-95 transition-transform"><ArrowLeft size={24} /> RETOUR</button>
             <h2 className="text-2xl font-black uppercase">Trajets prévus</h2>
             {trajets.length === 0 ? <p className="text-center p-12 italic bg-white/50 rounded-3xl">Aucun trajet pour l'instant.</p> : 
               trajets.map(t => (
@@ -139,49 +135,36 @@ export default function App() {
           </div>
         )}
 
-        {view === 'messages' && (
-          <div className="text-center mt-12 space-y-6 px-4">
-            <MessageCircle size={100} className="mx-auto text-[#4A86B4]" />
-            <h2 className="text-3xl font-black uppercase text-[#4A86B4]">Messagerie</h2>
-            <div className="bg-white/95 p-8 rounded-3xl border-4 border-dashed border-[#4A86B4] shadow-lg">
-              <p className="text-xl font-bold italic text-gray-800">Bientôt disponible !<br/><br/>Appelez directement votre chauffeur en attendant.</p>
-            </div>
-          </div>
-        )}
-
         {view === 'parametres' && (
-          <div className="space-y-4 px-2">
-            <div className="bg-white/95 p-5 rounded-3xl shadow-xl mt-2 border-4 border-[#4A86B4] text-center space-y-4">
+          <div className="space-y-2 px-2">
+            <div className="bg-white/95 p-4 rounded-3xl shadow-xl border-4 border-[#4A86B4] text-center space-y-2">
               <div className="flex items-center justify-center gap-4">
-                <div className="w-14 h-14 bg-[#4A86B4] rounded-full flex items-center justify-center text-white"><User size={30} /></div>
+                <div className="w-12 h-12 bg-[#4A86B4] rounded-full flex items-center justify-center text-white"><User size={26} /></div>
                 <div className="text-left">
-                  <h2 className="text-xl font-black uppercase leading-none">{currentUser?.nom}</h2>
-                  <p className="text-lg font-black text-[#4A86B4]">{currentUser?.telephone}</p>
+                  <h2 className="text-lg font-black uppercase leading-none">{currentUser?.nom}</h2>
+                  <p className="text-md font-black text-[#4A86B4]">{currentUser?.telephone}</p>
                 </div>
               </div>
               {!confirmLogout ? (
-                <button onClick={() => setConfirmLogout(true)} className="w-full border-2 border-red-500 text-red-500 p-2 rounded-xl font-black uppercase text-sm">Se déconnecter</button>
+                <button onClick={() => setConfirmLogout(true)} className="w-full border-2 border-red-500 text-red-500 p-1.5 rounded-xl font-black uppercase text-[10px]">Se déconnecter</button>
               ) : (
-                <div className="flex gap-2 items-center justify-center"><p className="font-black text-red-600 text-xs">SÛR ?</p><button onClick={() => {localStorage.removeItem('user_boisset'); setView('login'); setCurrentUser(null);}} className="bg-red-600 text-white px-4 py-2 rounded-lg font-black text-xs">OUI</button><button onClick={() => setConfirmLogout(false)} className="bg-gray-100 px-4 py-2 rounded-lg font-black text-xs">NON</button></div>
+                <div className="flex gap-2 items-center justify-center"><p className="font-black text-red-600 text-xs">SÛR ?</p><button onClick={() => {localStorage.removeItem('user_boisset'); setView('login'); setCurrentUser(null);}} className="bg-red-600 text-white px-3 py-1 rounded-lg font-black text-xs">OUI</button><button onClick={() => setConfirmLogout(false)} className="bg-gray-100 px-3 py-1 rounded-lg font-black text-xs">NON</button></div>
               )}
             </div>
 
-            {/* BLOC MODE D'EMPLOI AJOUTÉ ICI */}
-            <div className="bg-white/95 p-5 rounded-3xl border-4 border-[#5B8C4E] shadow-lg space-y-2">
-              <h3 className="font-black text-[#5B8C4E] flex items-center gap-2 uppercase text-sm"><Info size={20}/> Astuce : Modifier un trajet</h3>
-              <p className="text-[12px] font-bold leading-snug text-gray-800 italic">
-                En attendant la mise à jour, pour modifier un trajet, il vous suffit de supprimer l'ancien et d'en créer un nouveau. C'est simple et rapide !
-              </p>
+            <div className="bg-white/95 p-3 rounded-3xl border-4 border-[#5B8C4E] shadow-lg space-y-1">
+              <h3 className="font-black text-[#5B8C4E] flex items-center gap-2 uppercase text-[11px]"><Info size={16}/> Astuce : Modifier un trajet</h3>
+              <p className="text-[11px] font-bold leading-tight text-gray-800 italic">Pour modifier un trajet, supprimez l'ancien et recréez-en un nouveau. C'est simple et rapide !</p>
             </div>
 
-            <div className="bg-white/90 p-5 rounded-3xl border-2 border-gray-300 space-y-2">
-              <h3 className="font-black text-gray-600 flex items-center gap-2 uppercase text-sm"><ShieldCheck size={20}/> Infos Sécurité</h3>
-              <p className="text-[12px] font-bold leading-snug text-gray-800">Cette application est un outil solidaire local. Aucune donnée n'est revendue. Vos informations servent uniquement à la mise en relation.</p>
+            <div className="bg-white/90 p-3 rounded-3xl border-2 border-gray-300 space-y-1">
+              <h3 className="font-black text-gray-600 flex items-center gap-2 uppercase text-[11px]"><ShieldCheck size={16}/> Infos Sécurité</h3>
+              <p className="text-[11px] font-bold leading-tight text-gray-800">Outil solidaire local. Aucune donnée revendue. Infos servant uniquement à la mise en relation.</p>
             </div>
 
-            <div className="bg-white p-4 rounded-2xl border-4 border-[#4A86B4] text-center shadow-md">
-              <p className="text-lg font-black text-[#4A86B4] uppercase leading-none">VERSION {VERSION}</p>
-              <p className="text-[11px] font-black text-[#4A86B4] uppercase mt-1">Gracieusement propulsé par Chris TAPOR</p>
+            <div className="bg-white p-3 rounded-2xl border-4 border-[#4A86B4] text-center shadow-md">
+              <p className="text-md font-black text-[#4A86B4] uppercase leading-none">VERSION {VERSION}</p>
+              <p className="text-[10px] font-black text-[#4A86B4] uppercase mt-0.5">Gracieusement propulsé par Chris TAPOR</p>
             </div>
           </div>
         )}
