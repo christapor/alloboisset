@@ -204,7 +204,7 @@ export default function App() {
 
             <div className="bg-white p-3 rounded-2xl border-4 border-[#4A86B4] text-center shadow-md">
               <p className="text-md font-black text-[#4A86B4] uppercase leading-none">VERSION {VERSION}</p>
-              <p className="text-[12px] font-black text-[#4A86B4] uppercase mt-1">Propulsé par Chris TAPOR</p>
+              <p className="text-[12px] font-black text-[#4A86B4] uppercase mt-1">Gracieusement propulsé par Chris TAPOR</p>
             </div>
           </div>
         )}
