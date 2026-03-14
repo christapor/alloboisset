@@ -25,7 +25,7 @@ export default function App() {
   const EMAIL_ADMIN = "christapor@gmail.com"; 
   
   // AJOUTE LES NUMÉROS DES AUTRES ADMINS ICI, SÉPARÉS PAR UNE VIRGULE
-  const LISTE_ADMINS = ["0660419226"]; 
+  const LISTE_ADMINS = ["0660419226" , "0619872263"]; 
 
   const LISTE_NOIRE = ["merde", "putain", "connard", "salope"]; 
 
