@@ -19,7 +19,7 @@ export default function App() {
   const [dateTrajet, setDateTrajet] = useState('');
   const [heureTrajet, setHeureTrajet] = useState('');
 
-  const VERSION = "1.36"; 
+  const VERSION = "1.37"; 
   const EMAIL_ADMIN = "christapor@gmail.com"; 
 
   useEffect(() => {
@@ -101,7 +101,7 @@ export default function App() {
         </div>
       </header>
 
-      <main className="flex-1 max-w-xl mx-auto w-full p-3 pb-32">
+      <main className="flex-1 max-w-xl mx-auto w-full p-3 pb-32 flex flex-col">
         {view === 'login' && (
           <form onSubmit={handleLogin} className="bg-white/95 p-6 rounded-3xl shadow-xl mt-2 border-2 border-[#4A86B4] space-y-4 text-center">
             <h2 className="text-xl font-black uppercase italic">Identification</h2>
@@ -118,12 +118,14 @@ export default function App() {
         )}
 
         {view === 'trajets' && (
-          <div className="grid grid-cols-1 gap-3 mt-1">
-            <div className="flex justify-center mb-1">
+          <div className="flex-1 flex flex-col justify-between">
+            {/* Bonjour reste en haut */}
+            <div className="flex justify-center mt-1">
                <span className="bg-white/90 backdrop-blur-sm px-5 py-1.5 rounded-full font-black text-md text-[#4A86B4] shadow-md border-2 border-[#4A86B4]">Bonjour {currentUser?.nom}</span>
             </div>
             
-            <div className="bg-white/30 backdrop-blur-md p-4 rounded-[2.5rem] shadow-2xl border-2 border-white/40 space-y-3">
+            {/* Le bloc de boutons est poussé tout en bas */}
+            <div className="bg-white/30 backdrop-blur-md p-4 rounded-[2.5rem] shadow-2xl border-2 border-white/40 space-y-3 mb-4">
               <button onClick={() => {chargerTrajets(); setView('liste_offres');}} className="flex flex-col items-center justify-center p-3 rounded-[1.5rem] shadow-lg bg-[#4A86B4] w-full text-white font-black text-lg uppercase active:scale-95 transition-transform"><Car size={32} className="mb-1" />Je vous emmène</button>
               <button onClick={() => {chargerTrajets(); setView('liste_demandes');}} className="flex flex-col items-center justify-center p-3 rounded-[1.5rem] shadow-lg bg-[#8E44AD] w-full text-white font-black text-lg uppercase active:scale-95 transition-transform"><Users size={32} className="mb-1" />Emmenez-moi</button>
               <div className="grid grid-cols-2 gap-3 pt-1">
