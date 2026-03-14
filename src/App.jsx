@@ -21,7 +21,7 @@ export default function App() {
   const [dateTrajet, setDateTrajet] = useState('');
   const [heureTrajet, setHeureTrajet] = useState('');
 
-  const VERSION = "1.43"; 
+  const VERSION = "1.44"; 
   const EMAIL_ADMIN = "christapor@gmail.com"; 
   
   // LISTE DES MODÉRATEURS (CHRIS ET FLORIAN)
@@ -145,7 +145,7 @@ export default function App() {
             <h1 className="text-xl font-black text-[#4A86B4] uppercase leading-none tracking-tighter">AlloBoisset</h1>
             <p className="text-[9px] font-black text-[#5B8C4E] uppercase tracking-[0.2em] mt-1 border-t-2 border-[#5B8C4E] pt-1">Covoiturage Villageois</p>
           </div>
-          <button onClick={handleShare} className="text-[#4A86B4] p-2 rounded-full active:bg-blue-50"><Share2 size={24}/></button>
+          <button onClick={handleShare} className="text-[#4A86B4] p-2 rounded-full active:bg-blue-50 transition-colors"><Share2 size={24}/></button>
         </div>
       </header>
 
@@ -187,7 +187,7 @@ export default function App() {
         {view === 'aide' && (
           <div className="space-y-4">
             <button onClick={() => setView('parametres')} className="bg-white border-4 border-[#4A86B4] text-[#4A86B4] px-4 py-2 rounded-xl font-black flex items-center gap-2 mb-2 w-fit shadow-md"><ArrowLeft size={20} /> RETOUR</button>
-            <div className="bg-white/95 p-6 rounded-3xl shadow-xl space-y-6">
+            <div className="bg-white/95 p-6 rounded-3xl shadow-xl space-y-6 overflow-y-auto">
               <h2 className="text-xl font-black uppercase text-[#4A86B4] border-b-4 border-[#4A86B4] pb-2 text-center italic">Guide AlloBoisset</h2>
               <section className="space-y-2">
                 <h3 className="font-black text-[#4A86B4] uppercase flex items-center gap-2"><Car size={20}/> Covoiturer</h3>
@@ -220,7 +220,7 @@ export default function App() {
                   <div className="flex justify-between items-center mb-1">
                     <p className="text-[10px] font-black uppercase text-gray-500">{m.sender_name}</p>
                     {estAdmin(currentUser?.telephone) && (
-                      <button onClick={() => supprimerMessage(m.id)} className="text-red-400 hover:text-red-600"><Trash2 size={14} /></button>
+                      <button onClick={() => supprimerMessage(m.id)} className="text-red-400 hover:text-red-600 transition-colors"><Trash2 size={14} /></button>
                     )}
                   </div>
                   <p className="text-sm font-bold leading-tight break-words whitespace-pre-wrap select-text">{m.text}</p>
@@ -229,7 +229,7 @@ export default function App() {
             </div>
             <form onSubmit={envoyerMessage} className="mt-3 flex items-end gap-2 bg-white p-2 rounded-2xl shadow-lg border-2 border-[#4A86B4]">
               <textarea value={nouveauMessage} onChange={(e)=>setNouveauMessage(e.target.value)} placeholder="Écrire au village..." rows="2" className="flex-1 p-2 bg-transparent font-bold text-sm resize-none focus:outline-none select-text" />
-              <button type="submit" className="bg-[#4A86B4] text-white p-3 rounded-xl shadow-md active:scale-95"><Send size={20}/></button>
+              <button type="submit" className="bg-[#4A86B4] text-white p-3 rounded-xl shadow-md active:scale-95 transition-transform"><Send size={20}/></button>
             </form>
           </div>
         )}
@@ -282,10 +282,10 @@ export default function App() {
                 <div className="w-12 h-12 bg-[#4A86B4] rounded-full flex items-center justify-center text-white"><User size={26} /></div>
                 <div className="text-left font-black"><h2 className="text-lg uppercase leading-none">{currentUser?.nom}</h2><p className="text-md text-[#4A86B4] select-text">{currentUser?.telephone}</p></div>
               </div>
-              <button onClick={() => setView('aide')} className="w-full bg-[#4A86B4] text-white p-3 rounded-xl font-black uppercase flex items-center justify-center gap-2 shadow-md active:scale-95"><Info size={20}/> Mode d'emploi</button>
+              <button onClick={() => setView('aide')} className="w-full bg-[#4A86B4] text-white p-3 rounded-xl font-black uppercase flex items-center justify-center gap-2 shadow-md active:scale-95 transition-transform"><Info size={20}/> Mode d'emploi</button>
               {!confirmLogout ? (<button onClick={() => setConfirmLogout(true)} className="w-full border-2 border-red-500 text-red-500 p-2 rounded-xl font-black uppercase text-[12px]">Se déconnecter</button>) : (
                 <div className="flex flex-col gap-2 p-2 bg-red-50 rounded-xl border-2 border-red-200">
-                  <p className="font-black text-red-600 text-sm italic">Quitter ?</p>
+                  <p className="font-black text-red-600 text-sm italic leading-tight">Voulez-vous vraiment vous déconnecter ?</p>
                   <div className="flex gap-2 justify-center">
                     <button onClick={() => {localStorage.removeItem('user_boisset'); setView('login'); setCurrentUser(null); setConfirmLogout(false);}} className="bg-red-600 text-white px-6 py-2 rounded-lg font-black text-sm">OUI</button>
                     <button onClick={() => setConfirmLogout(false)} className="bg-gray-200 text-gray-700 px-6 py-2 rounded-lg font-black text-sm">NON</button>
