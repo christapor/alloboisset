@@ -21,15 +21,12 @@ export default function App() {
   const [dateTrajet, setDateTrajet] = useState('');
   const [heureTrajet, setHeureTrajet] = useState('');
 
-  const VERSION = "1.45"; 
+  const VERSION = "1.47"; 
   const EMAIL_ADMIN = "christapor@gmail.com"; 
-  
-  // LISTE DES MODÉRATEURS (CHRIS ET FLORIAN)
   const LISTE_ADMINS = ["0660419226", "0619872263"]; 
 
   const LISTE_NOIRE = ["merde", "putain", "connard", "salope"]; 
 
-  // Lien mailto pré-rempli pour le PIN
   const MAILTO_PIN = `mailto:${EMAIL_ADMIN}?subject=AlloBoisset%20:%20Code%20PIN%20oubli%C3%A9&body=Bonjour%20Chris,%0D%0A%0D%0AJ'ai%20oubli%C3%A9%20mon%20code%20PIN%20pour%20l'application%20AlloBoisset.%0D%0AMon%20num%C3%A9ro%20de%20t%C3%A9l%C3%A9phone%20est%20le%20:%20`;
 
   useEffect(() => {
@@ -60,7 +57,16 @@ export default function App() {
   };
 
   const chargerMessages = async () => {
-    const { data } = await supabase.from('village_messages').select('*').order('created_at', { ascending: false }).limit(50);
+    const troisMoisEnMs = 90 * 24 * 60 * 60 * 1000;
+    const dateLimite = new Date(Date.now() - troisMoisEnMs).toISOString();
+
+    const { data } = await supabase
+      .from('village_messages')
+      .select('*')
+      .gt('created_at', dateLimite)
+      .order('created_at', { ascending: false })
+      .limit(100);
+    
     if (data) setMessages(data);
   };
 
@@ -136,11 +142,10 @@ export default function App() {
     return `${parts[2]}/${parts[1]}/${parts[0].slice(2)}`;
   };
 
-  // Helper pour formater la date d'un message (ex: 15 mars 2026, à 23h52)
   const formatDateTimeMessage = (dateStr) => {
     if(!dateStr) return "";
     const dateObj = new Date(dateStr);
-    const optionsDate = { day: 'numeric', month: 'long', year: 'numeric' };
+    const optionsDate = { day: 'numeric', month: 'long' };
     const datePart = dateObj.toLocaleDateString('fr-FR', optionsDate);
     
     const h = String(dateObj.getHours()).padStart(2, '0');
@@ -172,12 +177,10 @@ export default function App() {
           <form onSubmit={handleLogin} className="bg-white/95 p-6 rounded-3xl shadow-xl mt-2 border-2 border-[#4A86B4] space-y-4 text-center">
             <h2 className="text-xl font-black uppercase italic">Identification</h2>
             <input type="text" placeholder="PRÉNOM" value={loginPrenom} onChange={(e)=>setLoginPrenom(e.target.value)} required className="w-full p-4 text-lg rounded-xl border-4 border-gray-100 font-bold select-text" />
-            
             <div className="space-y-1">
               <input type="text" placeholder="NOM (FACULTATIF)" value={loginNomFamille} onChange={(e)=>setLoginNomFamille(e.target.value)} className="w-full p-4 text-lg rounded-xl border-4 border-gray-100 font-bold bg-gray-50/50 select-text" />
               <p className="text-[10px] font-black text-black uppercase italic px-2 tracking-tight">Seule l'initiale suivie d'un point sera affichée</p>
             </div>
-
             <input type="tel" placeholder="TÉLÉPHONE" value={loginTel} onChange={(e)=>setLoginTel(e.target.value)} required className="w-full p-4 text-lg rounded-xl border-4 border-gray-100 font-bold select-text" />
             <input type="password" inputMode="numeric" maxLength="4" placeholder="CODE PIN (4 CHIFFRES)" value={loginPin} onChange={(e)=>setLoginPin(e.target.value.replace(/\D/g,''))} required className="w-full p-4 text-lg rounded-xl border-4 border-orange-200 font-bold text-center select-text" />
             <button type="submit" className="w-full bg-[#4A86B4] text-white p-4 rounded-xl text-xl font-black uppercase shadow-lg">Entrer</button>
@@ -235,10 +238,10 @@ export default function App() {
               <h2 className="text-center font-black uppercase text-gray-400 text-[10px] mb-2 tracking-widest italic">Le Mur du Village</h2>
               {messages.map(m => (
                 <div key={m.id} className={`relative max-w-[85%] p-3 rounded-2xl shadow-sm ${m.sender_name === currentUser?.nom ? 'bg-blue-50 ml-auto border-r-4 border-[#4A86B4]' : 'bg-gray-50 border-l-4 border-gray-300'}`}>
-                  <div className="flex justify-between items-start mb-1 gap-2">
-                    <div className="font-black uppercase text-gray-500 leading-tight">
-                        <span className="text-sm">{m.sender_name}</span>
-                        <span className="text-[10px] lowercase italic ml-1">a écrit {formatDateTimeMessage(m.created_at)}</span>
+                  <div className="flex justify-between items-start mb-1 gap-4">
+                    <div className="flex flex-col leading-tight">
+                        <span className="text-sm font-black uppercase text-gray-500">{m.sender_name}</span>
+                        <span className="text-[10px] lowercase italic text-gray-400">a écrit {formatDateTimeMessage(m.created_at)}</span>
                     </div>
                     {estAdmin(currentUser?.telephone) && (
                       <button onClick={() => supprimerMessage(m.id)} className="text-red-400 hover:text-red-600 shrink-0"><Trash2 size={14} /></button>
@@ -282,7 +285,7 @@ export default function App() {
 
         {view === 'nouveau' && (
           <div className="space-y-4">
-            <button onClick={() => setView('trajets')} className="bg-white border-[6px] border-[#4A86B4] text-[#4A86B4] px-5 py-2 rounded-xl font-black flex items-center gap-2 text-lg shadow-xl"><ArrowLeft size={28} /> RETOUR</button>
+            <button onClick={() => setView('trajets')} className="bg-white border-[6px] border-[#4A86B4] text-[#4A86B4] px-5 py-2 rounded-xl font-black flex items-center gap-2 text-lg shadow-xl active:scale-95 transition-transform"><ArrowLeft size={28} /> RETOUR</button>
             <div className={`bg-white/95 p-6 rounded-3xl shadow-lg space-y-4 border-4 ${isDemande ? 'border-[#E67E22]' : 'border-[#5B8C4E]'}`}>
               <h2 className="text-xl font-black text-center uppercase">{editId ? 'Modifier' : (isDemande ? 'Je cherche' : 'Je propose')}</h2>
               <input type="text" value={depart} onChange={(e)=>setDepart(e.target.value)} className="w-full p-4 border-2 rounded-xl font-bold text-center select-text" />
