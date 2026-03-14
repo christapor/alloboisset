@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from './lib/supabaseClient';
-import { Car, User, MessageCircle, Plus, ArrowLeft, Trash2, Phone, ShieldCheck, Info, HandHelping } from 'lucide-react';
+import { Car, User, MessageCircle, Plus, ArrowLeft, Trash2, Phone, ShieldCheck, Users } from 'lucide-react';
 
 export default function App() {
   const [currentUser, setCurrentUser] = useState(null);
@@ -12,13 +12,13 @@ export default function App() {
   const [trajets, setTrajets] = useState([]);
   const [confirmLogout, setConfirmLogout] = useState(false);
   
-  const [isDemande, setIsDemande] = useState(false); // Pour savoir si on propose ou on demande
+  const [isDemande, setIsDemande] = useState(false);
   const [depart, setDepart] = useState('Boisset');
   const [arrivee, setArrivee] = useState('');
   const [dateTrajet, setDateTrajet] = useState('');
   const [heureTrajet, setHeureTrajet] = useState('');
 
-  const VERSION = "1.25"; 
+  const VERSION = "1.26"; 
 
   useEffect(() => {
     const savedUser = localStorage.getItem('user_boisset');
@@ -62,10 +62,7 @@ export default function App() {
 
   const publierTrajet = async () => {
     if (!arrivee || !dateTrajet || !heureTrajet) return alert("Champs vides !");
-    
-    // On ajoute un petit badge devant le nom pour différencier dans la liste
     const prefixe = isDemande ? "🙋 (Demande) " : "🚗 ";
-    
     const { error } = await supabase.from('rides').insert([{
       origin: depart, 
       destination: arrivee, 
@@ -110,7 +107,7 @@ export default function App() {
             <input type="text" placeholder="PRÉNOM" value={loginPrenom} onChange={(e)=>setLoginPrenom(e.target.value)} required className="w-full p-4 text-lg rounded-xl border-4 border-gray-100 font-bold" />
             <input type="text" placeholder="NOM (FACULTATIF)" value={loginNomFamille} onChange={(e)=>setLoginNomFamille(e.target.value)} className="w-full p-4 text-lg rounded-xl border-4 border-gray-100 font-bold bg-gray-50/50" />
             <input type="tel" placeholder="TÉLÉPHONE" value={loginTel} onChange={(e)=>setLoginTel(e.target.value)} required className="w-full p-4 text-lg rounded-xl border-4 border-gray-100 font-bold" />
-            <input type="password" inputMode="numeric" maxLength="4" placeholder="CODE PIN (4 CHIFFRES)" value={loginPin} onChange={(e)=>setLoginPin(e.target.value.replace(/\D/g,''))} required className="w-full p-4 text-lg rounded-xl border-4 border-orange-200 font-bold text-center tracking-[0.2em] placeholder:tracking-normal" />
+            <input type="password" inputMode="numeric" maxLength="4" placeholder="CODE PIN (4 CHIFFRES)" value={loginPin} onChange={(e)=>setLoginPin(e.target.value.replace(/\D/g,''))} required className="w-full p-4 text-lg rounded-xl border-4 border-orange-200 font-bold text-center placeholder:tracking-normal placeholder:text-gray-500" />
             <button type="submit" className="w-full bg-[#4A86B4] text-white p-4 rounded-xl text-xl font-black uppercase shadow-lg">Entrer</button>
           </form>
         )}
@@ -120,7 +117,7 @@ export default function App() {
             <p className="text-center font-black text-xl text-[#4A86B4] italic">Bonjour {currentUser?.nom} !</p>
             <button onClick={() => setView('liste')} className="flex flex-col items-center justify-center p-6 rounded-[2.5rem] shadow-xl bg-[#4A86B4] w-full text-white font-black text-2xl uppercase"><Car size={60} className="mb-2" />Chercher</button>
             <button onClick={() => {setIsDemande(false); setView('nouveau');}} className="flex flex-col items-center justify-center p-6 rounded-[2.5rem] shadow-xl bg-[#5B8C4E] w-full text-white font-black text-2xl uppercase"><Plus size={60} className="mb-2" />Proposer</button>
-            <button onClick={() => {setIsDemande(true); setView('nouveau');}} className="flex flex-col items-center justify-center p-6 rounded-[2.5rem] shadow-xl bg-[#E67E22] w-full text-white font-black text-2xl uppercase"><HandHelping size={60} className="mb-2" />Demander</button>
+            <button onClick={() => {setIsDemande(true); setView('nouveau');}} className="flex flex-col items-center justify-center p-6 rounded-[2.5rem] shadow-xl bg-[#E67E22] w-full text-white font-black text-2xl uppercase"><Users size={60} className="mb-2" />Demander</button>
           </div>
         )}
 
@@ -200,11 +197,6 @@ export default function App() {
               ) : (
                 <div className="flex gap-2 items-center justify-center"><p className="font-black text-red-600 text-sm">SÛR ?</p><button onClick={() => {localStorage.removeItem('user_boisset'); setView('login'); setCurrentUser(null);}} className="bg-red-600 text-white px-4 py-2 rounded-lg font-black text-sm">OUI</button><button onClick={() => setConfirmLogout(false)} className="bg-gray-100 px-4 py-2 rounded-lg font-black text-sm">NON</button></div>
               )}
-            </div>
-
-            <div className="bg-white/95 p-4 rounded-3xl border-4 border-[#5B8C4E] shadow-lg space-y-2">
-              <h3 className="font-black text-[#5B8C4E] flex items-center gap-2 uppercase text-[13px]"><Info size={20}/> Astuce : Modifier</h3>
-              <p className="text-base font-black leading-tight text-black italic">Pour modifier un trajet, supprimez l'ancien et recréez-en un nouveau. C'est plus simple !</p>
             </div>
 
             <div className="bg-white/90 p-4 rounded-3xl border-4 border-gray-400 space-y-2">
