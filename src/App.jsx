@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from './lib/supabaseClient';
-import { Car, User, MessageCircle, Plus, ArrowLeft, Trash2, Phone, ShieldCheck, Users, Edit, HelpCircle } from 'lucide-react';
+import { Car, User, MessageCircle, Plus, ArrowLeft, Trash2, Phone, ShieldCheck, Users, Edit } from 'lucide-react';
 
 export default function App() {
   const [currentUser, setCurrentUser] = useState(null);
@@ -20,7 +20,7 @@ export default function App() {
   const [heureTrajet, setHeureTrajet] = useState('');
 
   const VERSION = "1.31"; 
-  const EMAIL_ADMIN = "christapor@gmail.com"; // REMPLACE PAR TON EMAIL ICI
+  const EMAIL_ADMIN = "christapor@gmail.com"; // <-- METS TON EMAIL ICI
 
   useEffect(() => {
     const savedUser = localStorage.getItem('user_boisset');
@@ -54,23 +54,17 @@ export default function App() {
       return alert("Prénom, Téléphone et PIN (4 chiffres) requis.");
     }
 
-    const { data: profile, error } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('phone', loginTel)
-      .maybeSingle();
+    const { data: profile, error } = await supabase.from('profiles').select('*').eq('phone', loginTel).maybeSingle();
 
-    if (error) return alert("Erreur de connexion.");
+    if (error) return alert("Erreur de serveur.");
 
     if (profile) {
       if (profile.pin !== loginPin) {
-        return alert(`Code PIN incorrect ! Si vous l'avez oublié, contactez l'administrateur à l'adresse : ${EMAIL_ADMIN}`);
+        return alert(`Code PIN incorrect ! Pour le réinitialiser, écrivez à : ${EMAIL_ADMIN}`);
       }
     } else {
-      await supabase
-        .from('profiles')
-        .insert([{ phone: loginTel, pin: loginPin, name: loginPrenom.trim() }]);
-      alert("Bienvenue ! Votre code PIN est maintenant enregistré. Notez-le bien !");
+      await supabase.from('profiles').insert([{ phone: loginTel, pin: loginPin, name: loginPrenom.trim() }]);
+      alert("Profil créé ! Notez bien votre code PIN.");
     }
 
     const p = loginPrenom.trim();
@@ -159,7 +153,7 @@ export default function App() {
             <input type="tel" placeholder="TÉLÉPHONE" value={loginTel} onChange={(e)=>setLoginTel(e.target.value)} required className="w-full p-4 text-lg rounded-xl border-4 border-gray-100 font-bold" />
             <input type="password" inputMode="numeric" maxLength="4" placeholder="CODE PIN (4 CHIFFRES)" value={loginPin} onChange={(e)=>setLoginPin(e.target.value.replace(/\D/g,''))} required className="w-full p-4 text-lg rounded-xl border-4 border-orange-200 font-bold text-center placeholder:tracking-normal placeholder:text-gray-500" />
             <button type="submit" className="w-full bg-[#4A86B4] text-white p-4 rounded-xl text-xl font-black uppercase shadow-lg">Entrer</button>
-            <p className="text-[10px] text-center font-bold text-gray-500 uppercase tracking-tighter italic">PIN oublié ? {EMAIL_ADMIN}</p>
+            <p className="text-[9px] text-center font-bold text-gray-400 uppercase tracking-tighter italic">PIN oublié ? Contactez l'admin : {EMAIL_ADMIN}</p>
           </form>
         )}
 
@@ -237,16 +231,29 @@ export default function App() {
                 <button onClick={() => setConfirmLogout(true)} className="w-full border-2 border-red-500 text-red-500 p-2 rounded-xl font-black uppercase text-[12px] active:bg-red-50">Se déconnecter</button>
               ) : (
                 <div className="flex flex-col gap-2 p-2 bg-red-50 rounded-xl border-2 border-red-200">
-                  <p className="font-black text-red-600 text-sm italic">Voulez-vous vraiment quitter ?</p>
+                  <p className="font-black text-red-600 text-sm italic">Quitter ?</p>
                   <div className="flex gap-2 justify-center">
-                    <button onClick={() => {localStorage.removeItem('user_boisset'); setView('login'); setCurrentUser(null); setConfirmLogout(false);}} className="bg-red-600 text-white px-6 py-2 rounded-lg font-black text-sm shadow-md">OUI</button>
-                    <button onClick={() => setConfirmLogout(false)} className="bg-gray-200 text-gray-700 px-6 py-2 rounded-lg font-black text-sm shadow-md">NON</button>
+                    <button onClick={() => {localStorage.removeItem('user_boisset'); setView('login'); setCurrentUser(null); setConfirmLogout(false);}} className="bg-red-600 text-white px-6 py-2 rounded-lg font-black text-sm">OUI</button>
+                    <button onClick={() => setConfirmLogout(false)} className="bg-gray-200 text-gray-700 px-6 py-2 rounded-lg font-black text-sm">NON</button>
                   </div>
                 </div>
               )}
             </div>
-            <div className="bg-white/90 p-4 rounded-3xl border-4 border-gray-400 space-y-2">
-              <h3 className="font-black text-black flex items-center gap-2 uppercase text-[13px]"><ShieldCheck size={20}/> Sécurité</h3>
-              <p className="text-base font-black leading-tight text-black italic">PIN sécurisé par Supabase. Données privées.</p>
-            </div>
             <div className="bg-white p-3 rounded-2xl border-4 border-[#4A86B4] text-center shadow-md">
+              <p className="text-md font-black text-[#4A86B4] uppercase leading-none">VERSION {VERSION}</p>
+              <p className="text-[12px] font-black text-[#4A86B4] uppercase mt-1">Propulsé par Chris TAPOR</p>
+            </div>
+          </div>
+        )}
+      </main>
+
+      {currentUser && (
+        <nav className="fixed bottom-0 w-full bg-white border-t-8 border-[#4A86B4] flex justify-around p-2 shadow-2xl z-30">
+          <button onClick={() => {setView('trajets'); setConfirmLogout(false);}} className={`flex flex-col items-center font-black text-[10px] uppercase ${['trajets', 'liste', 'nouveau'].includes(view) ? 'text-[#4A86B4]' : 'text-gray-400'}`}><Car size={32} /> Accueil</button>
+          <button onClick={() => {setView('messages'); setConfirmLogout(false);}} className={`flex flex-col items-center font-black text-[10px] uppercase ${view === 'messages' ? 'text-[#4A86B4]' : 'text-gray-400'}`}><MessageCircle size={32} /> Messages</button>
+          <button onClick={() => {setView('parametres'); setConfirmLogout(false);}} className={`flex flex-col items-center font-black text-[10px] uppercase ${view === 'parametres' ? 'text-[#4A86B4]' : 'text-gray-400'}`}><ShieldCheck size={32} /> Paramètres</button>
+        </nav>
+      )}
+    </div>
+  );
+}
