@@ -21,13 +21,14 @@ export default function App() {
   const [dateTrajet, setDateTrajet] = useState('');
   const [heureTrajet, setHeureTrajet] = useState('');
 
-  const VERSION = "1.42"; 
+  const VERSION = "1.43"; 
   const EMAIL_ADMIN = "christapor@gmail.com"; 
-  const LISTE_ADMINS = ["0660419226" , "0619872263"]; 
+  
+  // LISTE DES MODÉRATEURS (CHRIS ET FLORIAN)
+  const LISTE_ADMINS = ["0660419226", "0619872263"]; 
 
   const LISTE_NOIRE = ["merde", "putain", "connard", "salope"]; 
 
-  // Lien mailto pré-rempli pour le PIN
   const MAILTO_PIN = `mailto:${EMAIL_ADMIN}?subject=AlloBoisset%20:%20Code%20PIN%20oubli%C3%A9&body=Bonjour%20Chris,%0D%0A%0D%0AJ'ai%20oubli%C3%A9%20mon%20code%20PIN%20pour%20l'application%20AlloBoisset.%0D%0AMon%20num%C3%A9ro%20de%20t%C3%A9l%C3%A9phone%20est%20le%20:%20`;
 
   useEffect(() => {
@@ -144,7 +145,7 @@ export default function App() {
             <h1 className="text-xl font-black text-[#4A86B4] uppercase leading-none tracking-tighter">AlloBoisset</h1>
             <p className="text-[9px] font-black text-[#5B8C4E] uppercase tracking-[0.2em] mt-1 border-t-2 border-[#5B8C4E] pt-1">Covoiturage Villageois</p>
           </div>
-          <button onClick={handleShare} className="text-[#4A86B4] p-2 rounded-full active:bg-blue-50 transition-colors"><Share2 size={24}/></button>
+          <button onClick={handleShare} className="text-[#4A86B4] p-2 rounded-full active:bg-blue-50"><Share2 size={24}/></button>
         </div>
       </header>
 
@@ -153,7 +154,12 @@ export default function App() {
           <form onSubmit={handleLogin} className="bg-white/95 p-6 rounded-3xl shadow-xl mt-2 border-2 border-[#4A86B4] space-y-4 text-center">
             <h2 className="text-xl font-black uppercase italic">Identification</h2>
             <input type="text" placeholder="PRÉNOM" value={loginPrenom} onChange={(e)=>setLoginPrenom(e.target.value)} required className="w-full p-4 text-lg rounded-xl border-4 border-gray-100 font-bold select-text" />
-            <input type="text" placeholder="NOM (FACULTATIF)" value={loginNomFamille} onChange={(e)=>setLoginNomFamille(e.target.value)} className="w-full p-4 text-lg rounded-xl border-4 border-gray-100 font-bold bg-gray-50/50 select-text" />
+            
+            <div className="space-y-1">
+              <input type="text" placeholder="NOM (FACULTATIF)" value={loginNomFamille} onChange={(e)=>setLoginNomFamille(e.target.value)} className="w-full p-4 text-lg rounded-xl border-4 border-gray-100 font-bold bg-gray-50/50 select-text" />
+              <p className="text-[10px] font-black text-gray-400 uppercase italic px-2 tracking-tight">Seule l'initiale suivie d'un point sera affichée</p>
+            </div>
+
             <input type="tel" placeholder="TÉLÉPHONE" value={loginTel} onChange={(e)=>setLoginTel(e.target.value)} required className="w-full p-4 text-lg rounded-xl border-4 border-gray-100 font-bold select-text" />
             <input type="password" inputMode="numeric" maxLength="4" placeholder="CODE PIN (4 CHIFFRES)" value={loginPin} onChange={(e)=>setLoginPin(e.target.value.replace(/\D/g,''))} required className="w-full p-4 text-lg rounded-xl border-4 border-orange-200 font-bold text-center select-text" />
             <button type="submit" className="w-full bg-[#4A86B4] text-white p-4 rounded-xl text-xl font-black uppercase shadow-lg">Entrer</button>
@@ -183,23 +189,19 @@ export default function App() {
             <button onClick={() => setView('parametres')} className="bg-white border-4 border-[#4A86B4] text-[#4A86B4] px-4 py-2 rounded-xl font-black flex items-center gap-2 mb-2 w-fit shadow-md"><ArrowLeft size={20} /> RETOUR</button>
             <div className="bg-white/95 p-6 rounded-3xl shadow-xl space-y-6">
               <h2 className="text-xl font-black uppercase text-[#4A86B4] border-b-4 border-[#4A86B4] pb-2 text-center italic">Guide AlloBoisset</h2>
-              
               <section className="space-y-2">
                 <h3 className="font-black text-[#4A86B4] uppercase flex items-center gap-2"><Car size={20}/> Covoiturer</h3>
                 <p className="text-sm font-bold text-gray-700 leading-tight">Pour proposer un trajet, cliquez sur <span className="text-[#5B8C4E]">PROPOSER</span>. Pour chercher une voiture, cliquez sur <span className="text-[#E67E22]">DEMANDER</span>.</p>
-                <p className="text-sm font-bold text-gray-700 leading-tight italic">Note : Les trajets disparaissent automatiquement 30 minutes après l'heure de départ.</p>
+                <p className="text-sm font-bold text-gray-700 leading-tight italic text-red-600">Note : Les trajets disparaissent automatiquement 30 minutes après l'heure de départ.</p>
               </section>
-
               <section className="space-y-2">
                 <h3 className="font-black text-[#8E44AD] uppercase flex items-center gap-2"><MessageCircle size={20}/> Le Mur du Village</h3>
                 <p className="text-sm font-bold text-gray-700 leading-tight">C'est un espace de discussion pour tous. Posez vos questions ou passez une petite annonce pour le village !</p>
               </section>
-
               <section className="space-y-2">
                 <h3 className="font-black text-[#4A86B4] uppercase flex items-center gap-2"><ShieldCheck size={20}/> Confidentialité</h3>
-                <p className="text-sm font-bold text-gray-700 leading-tight">Seuls les membres connectés peuvent voir les trajets et les numéros de téléphone. Vos données ne sont jamais partagées.</p>
+                <p className="text-sm font-bold text-gray-700 leading-tight">Seuls les membres connectés peuvent voir les trajets. Seule l'initiale de votre nom est affichée.</p>
               </section>
-
               <div className="pt-4 border-t-2 border-gray-100 text-center">
                 <p className="text-xs font-black uppercase text-gray-400">Besoin d'aide ?</p>
                 <a href={`mailto:${EMAIL_ADMIN}`} className="text-sm font-black text-[#4A86B4] underline">{EMAIL_ADMIN}</a>
@@ -280,9 +282,7 @@ export default function App() {
                 <div className="w-12 h-12 bg-[#4A86B4] rounded-full flex items-center justify-center text-white"><User size={26} /></div>
                 <div className="text-left font-black"><h2 className="text-lg uppercase leading-none">{currentUser?.nom}</h2><p className="text-md text-[#4A86B4] select-text">{currentUser?.telephone}</p></div>
               </div>
-              
               <button onClick={() => setView('aide')} className="w-full bg-[#4A86B4] text-white p-3 rounded-xl font-black uppercase flex items-center justify-center gap-2 shadow-md active:scale-95"><Info size={20}/> Mode d'emploi</button>
-
               {!confirmLogout ? (<button onClick={() => setConfirmLogout(true)} className="w-full border-2 border-red-500 text-red-500 p-2 rounded-xl font-black uppercase text-[12px]">Se déconnecter</button>) : (
                 <div className="flex flex-col gap-2 p-2 bg-red-50 rounded-xl border-2 border-red-200">
                   <p className="font-black text-red-600 text-sm italic">Quitter ?</p>
