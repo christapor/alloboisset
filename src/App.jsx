@@ -21,7 +21,7 @@ export default function App() {
   const [dateTrajet, setDateTrajet] = useState('');
   const [heureTrajet, setHeureTrajet] = useState('');
 
-  const VERSION = "1.47"; 
+  const VERSION = "1.48"; 
   const EMAIL_ADMIN = "christapor@gmail.com"; 
   const LISTE_ADMINS = ["0660419226", "0619872263"]; 
 
@@ -240,8 +240,8 @@ export default function App() {
                 <div key={m.id} className={`relative max-w-[85%] p-3 rounded-2xl shadow-sm ${m.sender_name === currentUser?.nom ? 'bg-blue-50 ml-auto border-r-4 border-[#4A86B4]' : 'bg-gray-50 border-l-4 border-gray-300'}`}>
                   <div className="flex justify-between items-start mb-1 gap-4">
                     <div className="flex flex-col leading-tight">
-                        <span className="text-sm font-black uppercase text-gray-500">{m.sender_name}</span>
-                        <span className="text-[10px] lowercase italic text-gray-400">a écrit {formatDateTimeMessage(m.created_at)}</span>
+                        <span className="text-sm font-black uppercase text-gray-600">{m.sender_name}</span>
+                        <span className="text-[10px] lowercase italic text-gray-500 font-bold">a écrit {formatDateTimeMessage(m.created_at)}</span>
                     </div>
                     {estAdmin(currentUser?.telephone) && (
                       <button onClick={() => supprimerMessage(m.id)} className="text-red-400 hover:text-red-600 shrink-0"><Trash2 size={14} /></button>
@@ -285,7 +285,7 @@ export default function App() {
 
         {view === 'nouveau' && (
           <div className="space-y-4">
-            <button onClick={() => setView('trajets')} className="bg-white border-[6px] border-[#4A86B4] text-[#4A86B4] px-5 py-2 rounded-xl font-black flex items-center gap-2 text-lg shadow-xl active:scale-95 transition-transform"><ArrowLeft size={28} /> RETOUR</button>
+            <button onClick={() => setView('trajets')} className="bg-white border-[6px] border-[#4A86B4] text-[#4A86B4] px-5 py-2 rounded-xl font-black flex items-center gap-2 text-lg shadow-xl"><ArrowLeft size={28} /> RETOUR</button>
             <div className={`bg-white/95 p-6 rounded-3xl shadow-lg space-y-4 border-4 ${isDemande ? 'border-[#E67E22]' : 'border-[#5B8C4E]'}`}>
               <h2 className="text-xl font-black text-center uppercase">{editId ? 'Modifier' : (isDemande ? 'Je cherche' : 'Je propose')}</h2>
               <input type="text" value={depart} onChange={(e)=>setDepart(e.target.value)} className="w-full p-4 border-2 rounded-xl font-bold text-center select-text" />
