@@ -21,7 +21,7 @@ export default function App() {
   const [dateTrajet, setDateTrajet] = useState('');
   const [heureTrajet, setHeureTrajet] = useState('');
 
-  const VERSION = "1.38"; 
+  const VERSION = "1.39"; 
   const EMAIL_ADMIN = "christapor@gmail.com"; 
 
   useEffect(() => {
@@ -57,7 +57,7 @@ export default function App() {
   };
 
   const envoyerMessage = async (e) => {
-    e.preventDefault();
+    if (e) e.preventDefault();
     if (!nouveauMessage.trim()) return;
     const { error } = await supabase.from('village_messages').insert([{ sender_name: currentUser.nom, text: nouveauMessage.trim() }]);
     if (!error) { setNouveauMessage(''); chargerMessages(); }
@@ -119,7 +119,7 @@ export default function App() {
             <h1 className="text-xl font-black text-[#4A86B4] uppercase leading-none tracking-tighter">AlloBoisset</h1>
             <p className="text-[9px] font-black text-[#5B8C4E] uppercase tracking-[0.2em] mt-1 border-t-2 border-[#5B8C4E] pt-1">Covoiturage Villageois</p>
           </div>
-          <button onClick={handleShare} className="text-[#4A86B4] p-2 rounded-full active:bg-blue-50"><Share2 size={24}/></button>
+          <button onClick={handleShare} className="text-[#4A86B4] p-2 rounded-full active:bg-blue-50 transition-colors"><Share2 size={24}/></button>
         </div>
       </header>
 
@@ -151,24 +151,35 @@ export default function App() {
         )}
 
         {view === 'messages' && (
-          <div className="flex flex-col flex-1 h-[70vh]">
+          <div className="flex flex-col flex-1 h-[72vh]">
             <button onClick={() => setView('trajets')} className="bg-white border-4 border-[#4A86B4] text-[#4A86B4] px-4 py-2 rounded-xl font-black flex items-center gap-2 mb-2 w-fit shadow-md"><ArrowLeft size={20} /> RETOUR</button>
-            <div className="flex-1 bg-white/90 backdrop-blur-sm rounded-3xl p-4 overflow-y-auto space-y-3 shadow-inner">
-              <h2 className="text-center font-black uppercase text-gray-400 text-xs mb-2">Le Mur du Village</h2>
-              {messages.map(m => (
-                <div key={m.id} className={`max-w-[85%] p-3 rounded-2xl shadow-sm ${m.sender_name === currentUser?.nom ? 'bg-blue-50 ml-auto border-r-4 border-[#4A86B4]' : 'bg-gray-50 border-l-4 border-gray-300'}`}>
-                  <p className="text-[10px] font-black uppercase text-gray-500 mb-1">{m.sender_name}</p>
-                  <p className="text-sm font-bold leading-tight">{m.text}</p>
-                </div>
-              ))}
+            <div className="flex-1 bg-white/90 backdrop-blur-sm rounded-3xl p-4 overflow-y-auto space-y-3 shadow-inner border-2 border-white/50">
+              <h2 className="text-center font-black uppercase text-gray-400 text-[10px] mb-2 tracking-widest italic">Le Mur du Village</h2>
+              {messages.length === 0 ? <p className="text-center text-gray-400 italic text-sm pt-4">Silence radio... Lancez la discussion !</p> : 
+                messages.map(m => (
+                  <div key={m.id} className={`max-w-[85%] p-3 rounded-2xl shadow-sm ${m.sender_name === currentUser?.nom ? 'bg-blue-50 ml-auto border-r-4 border-[#4A86B4]' : 'bg-gray-50 border-l-4 border-gray-300'}`}>
+                    <div className="flex justify-between items-center mb-1">
+                      <p className="text-[10px] font-black uppercase text-gray-500">{m.sender_name}</p>
+                    </div>
+                    <p className="text-sm font-bold leading-tight break-words whitespace-pre-wrap">{m.text}</p>
+                  </div>
+                ))
+              }
             </div>
-            <form onSubmit={envoyerMessage} className="mt-3 flex gap-2">
-              <input type="text" value={nouveauMessage} onChange={(e)=>setNouveauMessage(e.target.value)} placeholder="Écrire au village..." className="flex-1 p-4 rounded-2xl border-2 border-[#4A86B4] font-bold shadow-lg" />
-              <button type="submit" className="bg-[#4A86B4] text-white p-4 rounded-2xl shadow-lg active:scale-95"><Send size={24}/></button>
-            </form>
+            <div className="mt-3 flex items-end gap-2 bg-white p-2 rounded-2xl shadow-lg border-2 border-[#4A86B4]">
+              <textarea 
+                value={nouveauMessage} 
+                onChange={(e)=>setNouveauMessage(e.target.value)} 
+                placeholder="Écrire au village..." 
+                rows="2"
+                className="flex-1 p-2 bg-transparent font-bold text-sm resize-none focus:outline-none"
+              />
+              <button onClick={envoyerMessage} className="bg-[#4A86B4] text-white p-3 rounded-xl shadow-md active:scale-95 transition-transform"><Send size={20}/></button>
+            </div>
           </div>
         )}
 
+        {/* ... (Le reste du code reste identique) */}
         {(view === 'liste_offres' || view === 'liste_demandes') && (
           <div className="space-y-4">
             <button onClick={() => setView('trajets')} className="bg-white border-[6px] border-[#4A86B4] text-[#4A86B4] px-5 py-2 rounded-xl font-black flex items-center gap-2 text-lg shadow-xl"><ArrowLeft size={28} /> RETOUR</button>
@@ -198,7 +209,7 @@ export default function App() {
 
         {view === 'nouveau' && (
           <div className="space-y-4">
-            <button onClick={() => setView('trajets')} className="bg-white border-[6px] border-[#4A86B4] text-[#4A86B4] px-5 py-2 rounded-xl font-black flex items-center gap-2 text-lg shadow-xl"><ArrowLeft size={28} /> RETOUR</button>
+            <button onClick={() => setView('trajets')} className="bg-white border-[6px] border-[#4A86B4] text-[#4A86B4] px-5 py-2 rounded-xl font-black flex items-center gap-2 text-lg shadow-xl active:scale-95 transition-transform"><ArrowLeft size={28} /> RETOUR</button>
             <div className={`bg-white/95 p-6 rounded-3xl shadow-lg space-y-4 border-4 ${isDemande ? 'border-[#E67E22]' : 'border-[#5B8C4E]'}`}>
               <h2 className="text-xl font-black text-center uppercase">{editId ? 'Modifier' : (isDemande ? 'Je cherche' : 'Je propose')}</h2>
               <input type="text" value={depart} onChange={(e)=>setDepart(e.target.value)} className="w-full p-4 border-2 rounded-xl font-bold text-center" />
