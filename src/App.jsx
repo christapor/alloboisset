@@ -19,7 +19,7 @@ export default function App() {
   const [dateTrajet, setDateTrajet] = useState('');
   const [heureTrajet, setHeureTrajet] = useState('');
 
-  const VERSION = "1.29"; 
+  const VERSION = "1.30"; 
 
   useEffect(() => {
     const savedUser = localStorage.getItem('user_boisset');
@@ -37,11 +37,10 @@ export default function App() {
   const chargerTrajets = async () => {
     const { data } = await supabase.from('rides').select('*').order('id', { ascending: false });
     if (data) {
-      // FILTRE : On ne garde que les trajets dont l'heure de départ + 30 min est après "maintenant"
       const maintenant = new Date();
       const trajetsActifs = data.filter(t => {
         const departPrevu = new Date(t.departure_time.replace(' ', 'T'));
-        const limite = new Date(departPrevu.getTime() + 30 * 60000); // +30 minutes
+        const limite = new Date(departPrevu.getTime() + 30 * 60000); 
         return limite > maintenant;
       });
       setTrajets(trajetsActifs);
@@ -51,15 +50,31 @@ export default function App() {
   const handleLogin = async (e) => {
     if (e) e.preventDefault();
     if (!loginPrenom.trim() || !loginTel.trim() || loginPin.length !== 4) {
-      return alert("Prénom, Téléphone et PIN requis.");
+      return alert("Prénom, Téléphone et PIN (4 chiffres) requis.");
     }
 
-    const { data: profile } = await supabase.from('profiles').select('*').eq('phone', loginTel).single();
+    // Vérification stricte dans Supabase
+    const { data: profile, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('phone', loginTel)
+      .maybeSingle();
+
+    if (error) return alert("Erreur de connexion au serveur.");
 
     if (profile) {
-      if (profile.pin !== loginPin) return alert("Code PIN incorrect !");
+      // Si le numéro existe, on vérifie impérativement le PIN
+      if (profile.pin !== loginPin) {
+        return alert("Code PIN incorrect pour ce numéro !");
+      }
     } else {
-      await supabase.from('profiles').insert([{ phone: loginTel, pin: loginPin, name: loginPrenom.trim() }]);
+      // Si le numéro n'existe pas, on crée le profil
+      const { error: insError } = await supabase
+        .from('profiles')
+        .insert([{ phone: loginTel, pin: loginPin, name: loginPrenom.trim() }]);
+      
+      if (insError) return alert("Impossible de créer le profil.");
+      alert("Bienvenue ! Votre code PIN a été enregistré.");
     }
 
     const prenom = loginPrenom.trim();
@@ -146,7 +161,7 @@ export default function App() {
             <input type="text" placeholder="PRÉNOM" value={loginPrenom} onChange={(e)=>setLoginPrenom(e.target.value)} required className="w-full p-4 text-lg rounded-xl border-4 border-gray-100 font-bold" />
             <input type="text" placeholder="NOM (FACULTATIF)" value={loginNomFamille} onChange={(e)=>setLoginNomFamille(e.target.value)} className="w-full p-4 text-lg rounded-xl border-4 border-gray-100 font-bold bg-gray-50/50" />
             <input type="tel" placeholder="TÉLÉPHONE" value={loginTel} onChange={(e)=>setLoginTel(e.target.value)} required className="w-full p-4 text-lg rounded-xl border-4 border-gray-100 font-bold" />
-            <input type="password" inputMode="numeric" maxLength="4" placeholder="CODE PIN (4 CHIFFRES)" value={loginPin} onChange={(e)=>setLoginPin(e.target.value.replace(/\D/g,''))} required className="w-full p-4 text-lg rounded-xl border-4 border-orange-200 font-bold text-center placeholder:tracking-normal" />
+            <input type="password" inputMode="numeric" maxLength="4" placeholder="CODE PIN (4 CHIFFRES)" value={loginPin} onChange={(e)=>setLoginPin(e.target.value.replace(/\D/g,''))} required className="w-full p-4 text-lg rounded-xl border-4 border-orange-200 font-bold text-center" />
             <button type="submit" className="w-full bg-[#4A86B4] text-white p-4 rounded-xl text-xl font-black uppercase shadow-lg">Entrer</button>
           </form>
         )}
@@ -154,7 +169,7 @@ export default function App() {
         {view === 'trajets' && (
           <div className="space-y-3 mt-2">
             <div className="flex justify-center mb-2">
-               <span className="bg-white px-5 py-2 rounded-full font-black text-lg text-[#4A86B4] shadow-md border-2 border-[#4A86B4]">
+               <span className="bg-white px-6 py-2 rounded-full font-black text-lg text-[#4A86B4] shadow-[0_4px_15px_rgba(0,0,0,0.3)] border-2 border-[#4A86B4]">
                  Bonjour {currentUser?.nom}
                </span>
             </div>
@@ -186,7 +201,7 @@ export default function App() {
 
         {view === 'liste' && (
           <div className="space-y-4">
-            <button onClick={() => setView('trajets')} className="bg-white border-[6px] border-[#4A86B4] text-[#4A86B4] px-5 py-3 rounded-xl font-black flex items-center gap-2 text-xl shadow-xl"><ArrowLeft size={32} /> RETOUR</button>
+            <button onClick={() => setView('trajets')} className="bg-white border-[6px] border-[#4A86B4] text-[#4A86B4] px-5 py-3 rounded-xl font-black flex items-center gap-2 text-xl shadow-xl active:scale-95 transition-transform"><ArrowLeft size={32} /> RETOUR</button>
             <h2 className="text-2xl font-black uppercase">Trajets prévus</h2>
             {trajets.length === 0 ? <p className="text-center p-12 italic bg-white/50 rounded-3xl">Aucun trajet à venir.</p> : 
               trajets.map(t => (
@@ -195,8 +210,8 @@ export default function App() {
                     <p className="font-black text-[#5B8C4E] text-xl uppercase leading-none">{t.origin} ➔ {t.destination}</p>
                     {t.driver_id === currentUser?.telephone && (
                       <div className="flex gap-2">
-                        <button onClick={() => ouvrirModification(t)} className="text-blue-500 bg-blue-50 p-2 rounded-full"><Edit size={24}/></button>
-                        <button onClick={() => supprimerTrajet(t.id)} className="text-red-500 bg-red-50 p-2 rounded-full"><Trash2 size={24}/></button>
+                        <button onClick={() => ouvrirModification(t)} className="text-blue-500 bg-blue-50 p-2 rounded-full shadow-sm"><Edit size={22}/></button>
+                        <button onClick={() => supprimerTrajet(t.id)} className="text-red-500 bg-red-50 p-2 rounded-full shadow-sm"><Trash2 size={22}/></button>
                       </div>
                     )}
                   </div>
@@ -204,7 +219,7 @@ export default function App() {
                     <span>{formatMaDate(t.departure_time)} à {t.departure_time.split(' ')[1]}</span>
                     <span className="text-[10px] bg-gray-100 px-2 py-1 rounded-full uppercase">{t.driver_name}</span>
                   </div>
-                  <a href={`tel:${t.driver_id}`} className="block w-full bg-[#4A86B4] text-white p-4 rounded-xl font-black text-2xl text-center uppercase flex items-center justify-center gap-3"><Phone size={24}/> Appeler</a>
+                  <a href={`tel:${t.driver_id}`} className="block w-full bg-[#4A86B4] text-white p-3 rounded-xl font-black text-xl text-center uppercase flex items-center justify-center gap-3"><Phone size={20}/> Appeler</a>
                 </div>
               ))
             }
@@ -215,17 +230,21 @@ export default function App() {
           <div className="space-y-4 px-2">
             <div className="bg-white/95 p-4 rounded-3xl shadow-xl border-4 border-[#4A86B4] text-center space-y-2">
               <div className="flex items-center justify-center gap-4">
-                <div className="w-12 h-12 bg-[#4A86B4] rounded-full flex items-center justify-center text-white"><User size={26} /></div>
+                <div className="w-12 h-12 bg-[#4A86B4] rounded-full flex items-center justify-center text-white shadow-inner"><User size={26} /></div>
                 <div className="text-left font-black">
                   <h2 className="text-lg uppercase leading-none">{currentUser?.nom}</h2>
                   <p className="text-md text-[#4A86B4]">{currentUser?.telephone}</p>
                 </div>
               </div>
               {!confirmLogout ? (
-                <button onClick={() => setConfirmLogout(true)} className="w-full border-2 border-red-500 text-red-500 p-2 rounded-xl font-black uppercase text-[12px]">Se déconnecter</button>
+                <button onClick={() => setConfirmLogout(true)} className="w-full border-2 border-red-500 text-red-500 p-2 rounded-xl font-black uppercase text-[12px] active:bg-red-50">Se déconnecter</button>
               ) : (
                 <div className="flex gap-2 items-center justify-center"><p className="font-black text-red-600 text-sm">SÛR ?</p><button onClick={() => {localStorage.removeItem('user_boisset'); setView('login'); setCurrentUser(null);}} className="bg-red-600 text-white px-4 py-2 rounded-lg font-black text-sm">OUI</button><button onClick={() => setConfirmLogout(false)} className="bg-gray-100 px-4 py-2 rounded-lg font-black text-sm">NON</button></div>
               )}
+            </div>
+            <div className="bg-white/90 p-4 rounded-3xl border-4 border-gray-400 space-y-2">
+              <h3 className="font-black text-black flex items-center gap-2 uppercase text-[13px]"><ShieldCheck size={20}/> Sécurité</h3>
+              <p className="text-base font-black leading-tight text-black italic">PIN sécurisé par Supabase. Données privées.</p>
             </div>
             <div className="bg-white p-3 rounded-2xl border-4 border-[#4A86B4] text-center shadow-md">
               <p className="text-md font-black text-[#4A86B4] uppercase leading-none">VERSION {VERSION}</p>
