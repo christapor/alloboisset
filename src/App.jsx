@@ -21,11 +21,12 @@ export default function App() {
   const [dateTrajet, setDateTrajet] = useState('');
   const [heureTrajet, setHeureTrajet] = useState('');
 
-  const VERSION = "1.40"; 
+  const VERSION = "1.41"; 
   const EMAIL_ADMIN = "christapor@gmail.com"; 
-  const TEL_ADMIN = "0660419226"; // <--- METS TON NUMÉRO ICI POUR ÊTRE MODÉRATEUR
+  
+  // AJOUTE LES NUMÉROS DES AUTRES ADMINS ICI, SÉPARÉS PAR UNE VIRGULE
+  const LISTE_ADMINS = ["0660419226"]; 
 
-  // Liste des mots à filtrer (tu peux en ajouter ou en enlever)
   const LISTE_NOIRE = ["merde", "putain", "connard", "salope"]; 
 
   useEffect(() => {
@@ -72,14 +73,11 @@ export default function App() {
   const envoyerMessage = async (e) => {
     if (e) e.preventDefault();
     if (!nouveauMessage.trim()) return;
-    
     const messageFiltre = filtrerTexte(nouveauMessage.trim());
-
     const { error } = await supabase.from('village_messages').insert([{ 
       sender_name: currentUser.nom, 
       text: messageFiltre 
     }]);
-    
     if (!error) { setNouveauMessage(''); chargerMessages(); }
   };
 
@@ -135,6 +133,8 @@ export default function App() {
     return `${parts[2]}/${parts[1]}/${parts[0].slice(2)}`;
   };
 
+  const estAdmin = (tel) => LISTE_ADMINS.includes(tel);
+
   return (
     <div className="min-h-screen bg-fixed bg-cover font-sans flex flex-col select-none" 
          style={{ backgroundImage: "linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), url('/alloboisset_fond.jpg')", backgroundPosition: 'center top' }}>
@@ -154,12 +154,12 @@ export default function App() {
         {view === 'login' && (
           <form onSubmit={handleLogin} className="bg-white/95 p-6 rounded-3xl shadow-xl mt-2 border-2 border-[#4A86B4] space-y-4 text-center">
             <h2 className="text-xl font-black uppercase italic">Identification</h2>
-            <input type="text" placeholder="PRÉNOM" value={loginPrenom} onChange={(e)=>setLoginPrenom(e.target.value)} required className="w-full p-4 text-lg rounded-xl border-4 border-gray-100 font-bold" />
-            <input type="text" placeholder="NOM (FACULTATIF)" value={loginNomFamille} onChange={(e)=>setLoginNomFamille(e.target.value)} className="w-full p-4 text-lg rounded-xl border-4 border-gray-100 font-bold bg-gray-50/50" />
-            <input type="tel" placeholder="TÉLÉPHONE" value={loginTel} onChange={(e)=>setLoginTel(e.target.value)} required className="w-full p-4 text-lg rounded-xl border-4 border-gray-100 font-bold" />
-            <input type="password" inputMode="numeric" maxLength="4" placeholder="CODE PIN (4 CHIFFRES)" value={loginPin} onChange={(e)=>setLoginPin(e.target.value.replace(/\D/g,''))} required className="w-full p-4 text-lg rounded-xl border-4 border-orange-200 font-bold text-center" />
+            <input type="text" placeholder="PRÉNOM" value={loginPrenom} onChange={(e)=>setLoginPrenom(e.target.value)} required className="w-full p-4 text-lg rounded-xl border-4 border-gray-100 font-bold select-text" />
+            <input type="text" placeholder="NOM (FACULTATIF)" value={loginNomFamille} onChange={(e)=>setLoginNomFamille(e.target.value)} className="w-full p-4 text-lg rounded-xl border-4 border-gray-100 font-bold bg-gray-50/50 select-text" />
+            <input type="tel" placeholder="TÉLÉPHONE" value={loginTel} onChange={(e)=>setLoginTel(e.target.value)} required className="w-full p-4 text-lg rounded-xl border-4 border-gray-100 font-bold select-text" />
+            <input type="password" inputMode="numeric" maxLength="4" placeholder="CODE PIN (4 CHIFFRES)" value={loginPin} onChange={(e)=>setLoginPin(e.target.value.replace(/\D/g,''))} required className="w-full p-4 text-lg rounded-xl border-4 border-orange-200 font-bold text-center select-text" />
             <button type="submit" className="w-full bg-[#4A86B4] text-white p-4 rounded-xl text-xl font-black uppercase shadow-lg">Entrer</button>
-            <div className="pt-2 border-t border-gray-100"><p className="text-sm font-black text-black">PIN oublié ?</p><a href={`mailto:${EMAIL_ADMIN}`} className="text-sm font-black text-[#4A86B4] underline">{EMAIL_ADMIN}</a></div>
+            <div className="pt-2 border-t border-gray-100"><p className="text-sm font-black text-black uppercase">PIN oublié ?</p><a href={`mailto:${EMAIL_ADMIN}`} className="text-sm font-black text-[#4A86B4] underline">{EMAIL_ADMIN}</a></div>
           </form>
         )}
 
@@ -187,13 +187,13 @@ export default function App() {
                   <div key={m.id} className={`relative max-w-[85%] p-3 rounded-2xl shadow-sm ${m.sender_name === currentUser?.nom ? 'bg-blue-50 ml-auto border-r-4 border-[#4A86B4]' : 'bg-gray-50 border-l-4 border-gray-300'}`}>
                     <div className="flex justify-between items-center mb-1">
                       <p className="text-[10px] font-black uppercase text-gray-500">{m.sender_name}</p>
-                      {currentUser?.telephone === TEL_ADMIN && (
+                      {estAdmin(currentUser?.telephone) && (
                         <button onClick={() => supprimerMessage(m.id)} className="text-red-400 hover:text-red-600 transition-colors">
                           <Trash2 size={14} />
                         </button>
                       )}
                     </div>
-                    <p className="text-sm font-bold leading-tight break-words whitespace-pre-wrap">{m.text}</p>
+                    <p className="text-sm font-bold leading-tight break-words whitespace-pre-wrap select-text">{m.text}</p>
                   </div>
                 ))
               }
@@ -204,7 +204,7 @@ export default function App() {
                 onChange={(e)=>setNouveauMessage(e.target.value)} 
                 placeholder="Écrire au village..." 
                 rows="2"
-                className="flex-1 p-2 bg-transparent font-bold text-sm resize-none focus:outline-none"
+                className="flex-1 p-2 bg-transparent font-bold text-sm resize-none focus:outline-none select-text"
               />
               <button onClick={envoyerMessage} className="bg-[#4A86B4] text-white p-3 rounded-xl shadow-md active:scale-95 transition-transform"><Send size={20}/></button>
             </div>
@@ -213,13 +213,13 @@ export default function App() {
 
         {(view === 'liste_offres' || view === 'liste_demandes') && (
           <div className="space-y-4">
-            <button onClick={() => setView('trajets')} className="bg-white border-[6px] border-[#4A86B4] text-[#4A86B4] px-5 py-2 rounded-xl font-black flex items-center gap-2 text-lg shadow-xl"><ArrowLeft size={28} /> RETOUR</button>
+            <button onClick={() => setView('trajets')} className="bg-white border-[6px] border-[#4A86B4] text-[#4A86B4] px-5 py-2 rounded-xl font-black flex items-center gap-2 text-lg shadow-xl active:scale-95 transition-transform"><ArrowLeft size={28} /> RETOUR</button>
             <h2 className="text-xl font-black uppercase italic text-white drop-shadow-md">{view === 'liste_offres' ? '🚗 Voitures disponibles' : '🙋 Voisins à pied'}</h2>
             {trajets.filter(t => view === 'liste_offres' ? !t.driver_name.includes('🙋') : t.driver_name.includes('🙋')).map(t => (
               <div key={t.id} className={`bg-white/95 p-5 rounded-[2rem] shadow-md border-l-8 ${view === 'liste_offres' ? 'border-[#4A86B4]' : 'border-[#8E44AD]'}`}>
                 <div className="flex justify-between items-start mb-2">
-                  <p className="font-black text-xl uppercase leading-none">{t.origin} ➔ {t.destination}</p>
-                  {(t.driver_id === currentUser?.telephone || currentUser?.telephone === TEL_ADMIN) && (
+                  <p className="font-black text-xl uppercase leading-none select-text">{t.origin} ➔ {t.destination}</p>
+                  {(t.driver_id === currentUser?.telephone || estAdmin(currentUser?.telephone)) && (
                     <div className="flex gap-2">
                       <button onClick={() => {setEditId(t.id); setDepart(t.origin); setArrivee(t.destination); setDateTrajet(t.departure_time.split(' ')[0]); setHeureTrajet(t.departure_time.split(' ')[1]); setIsDemande(t.driver_name.includes('🙋')); setView('nouveau');}} className="text-blue-500 bg-blue-50 p-2 rounded-full"><Edit size={20}/></button>
                       <button onClick={async () => {if(window.confirm("Supprimer ?")){await supabase.from('rides').delete().eq('id', t.id); chargerTrajets();}}} className="text-red-500 bg-red-50 p-2 rounded-full"><Trash2 size={20}/></button>
@@ -243,8 +243,8 @@ export default function App() {
             <button onClick={() => setView('trajets')} className="bg-white border-[6px] border-[#4A86B4] text-[#4A86B4] px-5 py-2 rounded-xl font-black flex items-center gap-2 text-lg shadow-xl active:scale-95 transition-transform"><ArrowLeft size={28} /> RETOUR</button>
             <div className={`bg-white/95 p-6 rounded-3xl shadow-lg space-y-4 border-4 ${isDemande ? 'border-[#E67E22]' : 'border-[#5B8C4E]'}`}>
               <h2 className="text-xl font-black text-center uppercase">{editId ? 'Modifier' : (isDemande ? 'Je cherche' : 'Je propose')}</h2>
-              <input type="text" value={depart} onChange={(e)=>setDepart(e.target.value)} className="w-full p-4 border-2 rounded-xl font-bold text-center" />
-              <input type="text" placeholder="DESTINATION ?" value={arrivee} onChange={(e)=>setArrivee(e.target.value)} className="w-full p-4 border-2 rounded-xl font-bold text-center uppercase" />
+              <input type="text" value={depart} onChange={(e)=>setDepart(e.target.value)} className="w-full p-4 border-2 rounded-xl font-bold text-center select-text" />
+              <input type="text" placeholder="DESTINATION ?" value={arrivee} onChange={(e)=>setArrivee(e.target.value)} className="w-full p-4 border-2 rounded-xl font-bold text-center uppercase select-text" />
               <div className="grid grid-cols-2 gap-2">
                 <input type="date" value={dateTrajet} onChange={(e)=>setDateTrajet(e.target.value)} className="w-full p-2 border-2 rounded-xl font-bold text-sm" />
                 <input type="time" value={heureTrajet} onChange={(e)=>setHeureTrajet(e.target.value)} className="w-full p-2 border-2 rounded-xl font-bold text-sm" />
@@ -259,7 +259,7 @@ export default function App() {
             <div className="bg-white/95 p-4 rounded-3xl shadow-xl border-4 border-[#4A86B4] text-center space-y-2">
               <div className="flex items-center justify-center gap-4">
                 <div className="w-12 h-12 bg-[#4A86B4] rounded-full flex items-center justify-center text-white"><User size={26} /></div>
-                <div className="text-left font-black"><h2 className="text-lg uppercase leading-none">{currentUser?.nom}</h2><p className="text-md text-[#4A86B4]">{currentUser?.telephone}</p></div>
+                <div className="text-left font-black"><h2 className="text-lg uppercase leading-none">{currentUser?.nom}</h2><p className="text-md text-[#4A86B4] select-text">{currentUser?.telephone}</p></div>
               </div>
               {!confirmLogout ? (<button onClick={() => setConfirmLogout(true)} className="w-full border-2 border-red-500 text-red-500 p-2 rounded-xl font-black uppercase text-[12px]">Se déconnecter</button>) : (
                 <div className="flex flex-col gap-2 p-2 bg-red-50 rounded-xl border-2 border-red-200">
