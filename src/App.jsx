@@ -19,7 +19,7 @@ export default function App() {
   const [dateTrajet, setDateTrajet] = useState('');
   const [heureTrajet, setHeureTrajet] = useState('');
 
-  const VERSION = "1.34"; 
+  const VERSION = "1.35"; 
   const EMAIL_ADMIN = "christapor@gmail.com"; 
 
   useEffect(() => {
@@ -51,11 +51,11 @@ export default function App() {
   const handleLogin = async (e) => {
     if (e) e.preventDefault();
     if (!loginPrenom.trim() || !loginTel.trim() || loginPin.length !== 4) {
-      return alert("Prénom, Téléphone et PIN requis.");
+      return alert("Prénom, Téléphone et PIN (4 chiffres) requis.");
     }
     const { data: profile } = await supabase.from('profiles').select('*').eq('phone', loginTel).maybeSingle();
     if (profile && profile.pin !== loginPin) {
-      return alert(`Code PIN incorrect ! Aide : ${EMAIL_ADMIN}`);
+      return alert("Code PIN incorrect !");
     } else if (!profile) {
       await supabase.from('profiles').insert([{ phone: loginTel, pin: loginPin, name: loginPrenom.trim() }]);
     }
@@ -63,6 +63,7 @@ export default function App() {
     const user = { nom: nomConvivial, telephone: loginTel, pin: loginPin };
     setCurrentUser(user);
     localStorage.setItem('user_boisset', JSON.stringify(user));
+    localStorage.setItem('last_tel', loginTel);
     setView('trajets');
   };
 
@@ -116,7 +117,7 @@ export default function App() {
         {view === 'trajets' && (
           <div className="grid grid-cols-1 gap-3 mt-1">
             <div className="flex justify-center mb-1">
-               <span className="bg-white px-5 py-1.5 rounded-full font-black text-md text-[#4A86B4] shadow-md border-2 border-[#4A86B4]">Bonjour {currentUser?.nom}</span>
+               <span className="bg-white px-5 py-1.5 rounded-full font-black text-md text-[#4A86B4] shadow-[0_4px_15px_rgba(0,0,0,0.3)] border-2 border-[#4A86B4]">Bonjour {currentUser?.nom}</span>
             </div>
             <button onClick={() => {chargerTrajets(); setView('liste_offres');}} className="flex flex-col items-center justify-center p-3 rounded-[1.5rem] shadow-lg bg-[#4A86B4] w-full text-white font-black text-lg uppercase active:scale-95 transition-transform"><Car size={32} className="mb-1" />Je vous emmène</button>
             <button onClick={() => {chargerTrajets(); setView('liste_demandes');}} className="flex flex-col items-center justify-center p-3 rounded-[1.5rem] shadow-lg bg-[#8E44AD] w-full text-white font-black text-lg uppercase active:scale-95 transition-transform"><Users size={32} className="mb-1" />Emmenez-moi</button>
@@ -129,7 +130,7 @@ export default function App() {
 
         {(view === 'liste_offres' || view === 'liste_demandes') && (
           <div className="space-y-4">
-            <button onClick={() => setView('trajets')} className="bg-white border-[6px] border-[#4A86B4] text-[#4A86B4] px-5 py-2 rounded-xl font-black flex items-center gap-2 text-lg shadow-xl"><ArrowLeft size={28} /> RETOUR</button>
+            <button onClick={() => setView('trajets')} className="bg-white border-[6px] border-[#4A86B4] text-[#4A86B4] px-5 py-2 rounded-xl font-black flex items-center gap-2 text-lg shadow-xl active:scale-95 transition-transform"><ArrowLeft size={28} /> RETOUR</button>
             <h2 className="text-xl font-black uppercase italic">{view === 'liste_offres' ? '🚗 Voitures disponibles' : '🙋 Voisins à pied'}</h2>
             {trajets.filter(t => view === 'liste_offres' ? !t.driver_name.includes('🙋') : t.driver_name.includes('🙋')).length === 0 ? 
               <p className="text-center p-12 italic bg-white/50 rounded-3xl">Rien pour le moment.</p> : 
@@ -139,8 +140,8 @@ export default function App() {
                     <p className={`font-black text-xl uppercase leading-none ${view === 'liste_offres' ? 'text-[#4A86B4]' : 'text-[#8E44AD]'}`}>{t.origin} ➔ {t.destination}</p>
                     {t.driver_id === currentUser?.telephone && (
                       <div className="flex gap-2">
-                        <button onClick={() => {setEditId(t.id); setDepart(t.origin); setArrivee(t.destination); setDateTrajet(t.departure_time.split(' ')[0]); setHeureTrajet(t.departure_time.split(' ')[1]); setIsDemande(t.driver_name.includes('🙋')); setView('nouveau');}} className="text-blue-500 bg-blue-50 p-2 rounded-full"><Edit size={20}/></button>
-                        <button onClick={async () => {if(window.confirm("Supprimer ?")){await supabase.from('rides').delete().eq('id', t.id); chargerTrajets();}}} className="text-red-500 bg-red-50 p-2 rounded-full"><Trash2 size={20}/></button>
+                        <button onClick={() => {setEditId(t.id); setDepart(t.origin); setArrivee(t.destination); setDateTrajet(t.departure_time.split(' ')[0]); setHeureTrajet(t.departure_time.split(' ')[1]); setIsDemande(t.driver_name.includes('🙋')); setView('nouveau');}} className="text-blue-500 bg-blue-50 p-2 rounded-full shadow-sm"><Edit size={20}/></button>
+                        <button onClick={async () => {if(window.confirm("Supprimer ?")){await supabase.from('rides').delete().eq('id', t.id); chargerTrajets();}}} className="text-red-500 bg-red-50 p-2 rounded-full shadow-sm"><Trash2 size={20}/></button>
                       </div>
                     )}
                   </div>
@@ -159,7 +160,7 @@ export default function App() {
 
         {view === 'nouveau' && (
           <div className="space-y-4">
-            <button onClick={() => setView('trajets')} className="bg-white border-[6px] border-[#4A86B4] text-[#4A86B4] px-5 py-2 rounded-xl font-black flex items-center gap-2 text-lg shadow-xl"><ArrowLeft size={28} /> RETOUR</button>
+            <button onClick={() => setView('trajets')} className="bg-white border-[6px] border-[#4A86B4] text-[#4A86B4] px-5 py-2 rounded-xl font-black flex items-center gap-2 text-lg shadow-xl active:scale-95 transition-transform"><ArrowLeft size={28} /> RETOUR</button>
             <div className={`bg-white/95 p-6 rounded-3xl shadow-lg space-y-4 border-4 ${isDemande ? 'border-[#E67E22]' : 'border-[#5B8C4E]'}`}>
               <h2 className={`text-xl font-black text-center uppercase ${isDemande ? 'text-[#E67E22]' : 'text-[#5B8C4E]'}`}>{editId ? 'Modifier' : (isDemande ? 'Je cherche' : 'Je propose')}</h2>
               <input type="text" value={depart} onChange={(e)=>setDepart(e.target.value)} className="w-full p-4 border-2 rounded-xl font-bold text-center" />
@@ -177,32 +178,32 @@ export default function App() {
           <div className="space-y-4 px-2">
             <div className="bg-white/95 p-4 rounded-3xl shadow-xl border-4 border-[#4A86B4] text-center space-y-2">
               <div className="flex items-center justify-center gap-4">
-                <div className="w-12 h-12 bg-[#4A86B4] rounded-full flex items-center justify-center text-white"><User size={26} /></div>
+                <div className="w-12 h-12 bg-[#4A86B4] rounded-full flex items-center justify-center text-white shadow-inner"><User size={26} /></div>
                 <div className="text-left font-black">
                   <h2 className="text-lg uppercase leading-none">{currentUser?.nom}</h2>
                   <p className="text-md text-[#4A86B4]">{currentUser?.telephone}</p>
                 </div>
               </div>
               {!confirmLogout ? (
-                <button onClick={() => setConfirmLogout(true)} className="w-full border-2 border-red-500 text-red-500 p-2 rounded-xl font-black uppercase text-[12px]">Se déconnecter</button>
+                <button onClick={() => setConfirmLogout(true)} className="w-full border-2 border-red-500 text-red-500 p-2 rounded-xl font-black uppercase text-[12px] active:bg-red-50">Se déconnecter</button>
               ) : (
                 <div className="flex flex-col gap-2 p-2 bg-red-50 rounded-xl border-2 border-red-200">
                   <p className="font-black text-red-600 text-sm italic leading-tight">Voulez-vous vraiment vous déconnecter ?</p>
                   <div className="flex gap-2 justify-center">
-                    <button onClick={() => {localStorage.removeItem('user_boisset'); setView('login'); setCurrentUser(null); setConfirmLogout(false);}} className="bg-red-600 text-white px-6 py-2 rounded-lg font-black text-sm">OUI</button>
-                    <button onClick={() => setConfirmLogout(false)} className="bg-gray-200 text-gray-700 px-6 py-2 rounded-lg font-black text-sm">NON</button>
+                    <button onClick={() => {localStorage.removeItem('user_boisset'); setView('login'); setCurrentUser(null); setConfirmLogout(false);}} className="bg-red-600 text-white px-6 py-2 rounded-lg font-black text-sm shadow-md">OUI</button>
+                    <button onClick={() => setConfirmLogout(false)} className="bg-gray-200 text-gray-700 px-6 py-2 rounded-lg font-black text-sm shadow-md">NON</button>
                   </div>
                 </div>
               )}
             </div>
             
-            <div className="bg-white/90 p-4 rounded-3xl border-4 border-gray-400 space-y-2 text-center">
+            <div className="bg-white/90 p-4 rounded-3xl border-4 border-gray-400 space-y-2 text-center shadow-md">
               <h3 className="font-black text-black flex items-center justify-center gap-2 uppercase text-[13px]"><ShieldCheck size={20}/> Sécurité des données</h3>
               <p className="text-sm font-black leading-tight text-gray-700 italic">Outil villageois solidaire. Vos données (Nom, Tél) ne servent qu'à la mise en relation. Aucun traçage, aucune publicité.</p>
             </div>
 
             <div className="bg-white p-3 rounded-2xl border-4 border-[#4A86B4] text-center shadow-md">
-              <p className="text-md font-black text-[#4A86B4] uppercase leading-none">VERSION {VERSION}</p>
+              <p className="text-md font-black text-[#4A86B4] uppercase leading-none tracking-tight">VERSION {VERSION}</p>
               <p className="text-[12px] font-black text-[#4A86B4] uppercase mt-1 italic tracking-tight">Gracieusement propulsé par Chris TAPOR</p>
             </div>
           </div>
