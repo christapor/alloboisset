@@ -21,8 +21,12 @@ export default function App() {
   const [dateTrajet, setDateTrajet] = useState('');
   const [heureTrajet, setHeureTrajet] = useState('');
 
-  const VERSION = "1.39"; 
+  const VERSION = "1.40"; 
   const EMAIL_ADMIN = "christapor@gmail.com"; 
+  const TEL_ADMIN = "0660419226"; // <--- METS TON NUMÉRO ICI POUR ÊTRE MODÉRATEUR
+
+  // Liste des mots à filtrer (tu peux en ajouter ou en enlever)
+  const LISTE_NOIRE = ["merde", "putain", "connard", "salope"]; 
 
   useEffect(() => {
     const savedUser = localStorage.getItem('user_boisset');
@@ -56,11 +60,34 @@ export default function App() {
     if (data) setMessages(data);
   };
 
+  const filtrerTexte = (texte) => {
+    let textePropre = texte;
+    LISTE_NOIRE.forEach(mot => {
+      const regex = new RegExp(mot, 'gi');
+      textePropre = textePropre.replace(regex, '****');
+    });
+    return textePropre;
+  };
+
   const envoyerMessage = async (e) => {
     if (e) e.preventDefault();
     if (!nouveauMessage.trim()) return;
-    const { error } = await supabase.from('village_messages').insert([{ sender_name: currentUser.nom, text: nouveauMessage.trim() }]);
+    
+    const messageFiltre = filtrerTexte(nouveauMessage.trim());
+
+    const { error } = await supabase.from('village_messages').insert([{ 
+      sender_name: currentUser.nom, 
+      text: messageFiltre 
+    }]);
+    
     if (!error) { setNouveauMessage(''); chargerMessages(); }
+  };
+
+  const supprimerMessage = async (id) => {
+    if (window.confirm("Supprimer ce message du mur ?")) {
+      const { error } = await supabase.from('village_messages').delete().eq('id', id);
+      if (!error) chargerMessages();
+    }
   };
 
   const handleShare = async () => {
@@ -157,9 +184,14 @@ export default function App() {
               <h2 className="text-center font-black uppercase text-gray-400 text-[10px] mb-2 tracking-widest italic">Le Mur du Village</h2>
               {messages.length === 0 ? <p className="text-center text-gray-400 italic text-sm pt-4">Silence radio... Lancez la discussion !</p> : 
                 messages.map(m => (
-                  <div key={m.id} className={`max-w-[85%] p-3 rounded-2xl shadow-sm ${m.sender_name === currentUser?.nom ? 'bg-blue-50 ml-auto border-r-4 border-[#4A86B4]' : 'bg-gray-50 border-l-4 border-gray-300'}`}>
+                  <div key={m.id} className={`relative max-w-[85%] p-3 rounded-2xl shadow-sm ${m.sender_name === currentUser?.nom ? 'bg-blue-50 ml-auto border-r-4 border-[#4A86B4]' : 'bg-gray-50 border-l-4 border-gray-300'}`}>
                     <div className="flex justify-between items-center mb-1">
                       <p className="text-[10px] font-black uppercase text-gray-500">{m.sender_name}</p>
+                      {currentUser?.telephone === TEL_ADMIN && (
+                        <button onClick={() => supprimerMessage(m.id)} className="text-red-400 hover:text-red-600 transition-colors">
+                          <Trash2 size={14} />
+                        </button>
+                      )}
                     </div>
                     <p className="text-sm font-bold leading-tight break-words whitespace-pre-wrap">{m.text}</p>
                   </div>
@@ -179,7 +211,6 @@ export default function App() {
           </div>
         )}
 
-        {/* ... (Le reste du code reste identique) */}
         {(view === 'liste_offres' || view === 'liste_demandes') && (
           <div className="space-y-4">
             <button onClick={() => setView('trajets')} className="bg-white border-[6px] border-[#4A86B4] text-[#4A86B4] px-5 py-2 rounded-xl font-black flex items-center gap-2 text-lg shadow-xl"><ArrowLeft size={28} /> RETOUR</button>
@@ -188,7 +219,7 @@ export default function App() {
               <div key={t.id} className={`bg-white/95 p-5 rounded-[2rem] shadow-md border-l-8 ${view === 'liste_offres' ? 'border-[#4A86B4]' : 'border-[#8E44AD]'}`}>
                 <div className="flex justify-between items-start mb-2">
                   <p className="font-black text-xl uppercase leading-none">{t.origin} ➔ {t.destination}</p>
-                  {t.driver_id === currentUser?.telephone && (
+                  {(t.driver_id === currentUser?.telephone || currentUser?.telephone === TEL_ADMIN) && (
                     <div className="flex gap-2">
                       <button onClick={() => {setEditId(t.id); setDepart(t.origin); setArrivee(t.destination); setDateTrajet(t.departure_time.split(' ')[0]); setHeureTrajet(t.departure_time.split(' ')[1]); setIsDemande(t.driver_name.includes('🙋')); setView('nouveau');}} className="text-blue-500 bg-blue-50 p-2 rounded-full"><Edit size={20}/></button>
                       <button onClick={async () => {if(window.confirm("Supprimer ?")){await supabase.from('rides').delete().eq('id', t.id); chargerTrajets();}}} className="text-red-500 bg-red-50 p-2 rounded-full"><Trash2 size={20}/></button>
