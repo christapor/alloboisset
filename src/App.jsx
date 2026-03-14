@@ -119,7 +119,7 @@ export default function App() {
           <div className="space-y-3 mt-2">
             <div className="flex justify-center mb-2">
                <span className="bg-white px-5 py-2 rounded-full font-black text-lg text-[#4A86B4] shadow-[0_4px_10px_rgba(0,0,0,0.2)] border-2 border-[#4A86B4]">
-                 Bonjour {currentUser?.nom} !
+                 Bonjour {currentUser?.nom} 
                </span>
             </div>
             <button onClick={() => setView('liste')} className="flex flex-col items-center justify-center p-3 rounded-[1.5rem] shadow-xl bg-[#4A86B4] w-full text-white font-black text-lg uppercase active:scale-95 transition-transform"><Car size={35} className="mb-1" />Chercher</button>
