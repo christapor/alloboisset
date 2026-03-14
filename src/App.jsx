@@ -19,7 +19,7 @@ export default function App() {
   const [dateTrajet, setDateTrajet] = useState('');
   const [heureTrajet, setHeureTrajet] = useState('');
 
-  const VERSION = "1.35"; 
+  const VERSION = "1.36"; 
   const EMAIL_ADMIN = "christapor@gmail.com"; 
 
   useEffect(() => {
@@ -55,7 +55,7 @@ export default function App() {
     }
     const { data: profile } = await supabase.from('profiles').select('*').eq('phone', loginTel).maybeSingle();
     if (profile && profile.pin !== loginPin) {
-      return alert("Code PIN incorrect !");
+      return alert(`Code PIN incorrect ! Aide : ${EMAIL_ADMIN}`);
     } else if (!profile) {
       await supabase.from('profiles').insert([{ phone: loginTel, pin: loginPin, name: loginPrenom.trim() }]);
     }
@@ -85,10 +85,13 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-fixed bg-cover bg-center font-sans flex flex-col select-none" 
-         style={{ backgroundImage: "linear-gradient(rgba(255,255,255,0.6), rgba(255,255,255,0.6)), url('/alloboisset_fond.jpg')" }}>
+    <div className="min-h-screen bg-fixed bg-cover font-sans flex flex-col select-none" 
+         style={{ 
+           backgroundImage: "linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), url('/alloboisset_fond.jpg')",
+           backgroundPosition: 'center top' 
+         }}>
       
-      <header className="bg-white/95 shadow-xl p-3 sticky top-0 z-20 border-b-8 border-[#4A86B4] flex flex-col items-center">
+      <header className="bg-white/90 shadow-xl p-3 sticky top-0 z-20 border-b-8 border-[#4A86B4] flex flex-col items-center backdrop-blur-sm">
         <div className="flex items-center gap-5 w-full justify-center">
           <img src="/alloboisset_logo.jpg" className="h-12 w-12 object-contain" alt="Logo" />
           <div className="flex flex-col text-center">
@@ -117,13 +120,16 @@ export default function App() {
         {view === 'trajets' && (
           <div className="grid grid-cols-1 gap-3 mt-1">
             <div className="flex justify-center mb-1">
-               <span className="bg-white px-5 py-1.5 rounded-full font-black text-md text-[#4A86B4] shadow-[0_4px_15px_rgba(0,0,0,0.3)] border-2 border-[#4A86B4]">Bonjour {currentUser?.nom}</span>
+               <span className="bg-white/90 backdrop-blur-sm px-5 py-1.5 rounded-full font-black text-md text-[#4A86B4] shadow-md border-2 border-[#4A86B4]">Bonjour {currentUser?.nom}</span>
             </div>
-            <button onClick={() => {chargerTrajets(); setView('liste_offres');}} className="flex flex-col items-center justify-center p-3 rounded-[1.5rem] shadow-lg bg-[#4A86B4] w-full text-white font-black text-lg uppercase active:scale-95 transition-transform"><Car size={32} className="mb-1" />Je vous emmène</button>
-            <button onClick={() => {chargerTrajets(); setView('liste_demandes');}} className="flex flex-col items-center justify-center p-3 rounded-[1.5rem] shadow-lg bg-[#8E44AD] w-full text-white font-black text-lg uppercase active:scale-95 transition-transform"><Users size={32} className="mb-1" />Emmenez-moi</button>
-            <div className="grid grid-cols-2 gap-3 pt-2">
-              <button onClick={() => {setIsDemande(false); setEditId(null); setView('nouveau');}} className="flex flex-col items-center justify-center p-3 rounded-[1.5rem] shadow-lg bg-[#5B8C4E] text-white font-black text-sm uppercase active:scale-95 transition-transform"><Plus size={30} className="mb-1" />Proposer</button>
-              <button onClick={() => {setIsDemande(true); setEditId(null); setView('nouveau');}} className="flex flex-col items-center justify-center p-3 rounded-[1.5rem] shadow-lg bg-[#E67E22] text-white font-black text-sm uppercase active:scale-95 transition-transform"><HelpCircle size={30} className="mb-1" />Demander</button>
+            
+            <div className="bg-white/30 backdrop-blur-md p-4 rounded-[2.5rem] shadow-2xl border-2 border-white/40 space-y-3">
+              <button onClick={() => {chargerTrajets(); setView('liste_offres');}} className="flex flex-col items-center justify-center p-3 rounded-[1.5rem] shadow-lg bg-[#4A86B4] w-full text-white font-black text-lg uppercase active:scale-95 transition-transform"><Car size={32} className="mb-1" />Je vous emmène</button>
+              <button onClick={() => {chargerTrajets(); setView('liste_demandes');}} className="flex flex-col items-center justify-center p-3 rounded-[1.5rem] shadow-lg bg-[#8E44AD] w-full text-white font-black text-lg uppercase active:scale-95 transition-transform"><Users size={32} className="mb-1" />Emmenez-moi</button>
+              <div className="grid grid-cols-2 gap-3 pt-1">
+                <button onClick={() => {setIsDemande(false); setEditId(null); setView('nouveau');}} className="flex flex-col items-center justify-center p-3 rounded-[1.5rem] shadow-lg bg-[#5B8C4E] text-white font-black text-sm uppercase active:scale-95 transition-transform"><Plus size={30} className="mb-1" />Proposer</button>
+                <button onClick={() => {setIsDemande(true); setEditId(null); setView('nouveau');}} className="flex flex-col items-center justify-center p-3 rounded-[1.5rem] shadow-lg bg-[#E67E22] text-white font-black text-sm uppercase active:scale-95 transition-transform"><HelpCircle size={30} className="mb-1" />Demander</button>
+              </div>
             </div>
           </div>
         )}
@@ -131,11 +137,11 @@ export default function App() {
         {(view === 'liste_offres' || view === 'liste_demandes') && (
           <div className="space-y-4">
             <button onClick={() => setView('trajets')} className="bg-white border-[6px] border-[#4A86B4] text-[#4A86B4] px-5 py-2 rounded-xl font-black flex items-center gap-2 text-lg shadow-xl active:scale-95 transition-transform"><ArrowLeft size={28} /> RETOUR</button>
-            <h2 className="text-xl font-black uppercase italic">{view === 'liste_offres' ? '🚗 Voitures disponibles' : '🙋 Voisins à pied'}</h2>
+            <h2 className="text-xl font-black uppercase italic text-white drop-shadow-md">{view === 'liste_offres' ? '🚗 Voitures disponibles' : '🙋 Voisins à pied'}</h2>
             {trajets.filter(t => view === 'liste_offres' ? !t.driver_name.includes('🙋') : t.driver_name.includes('🙋')).length === 0 ? 
-              <p className="text-center p-12 italic bg-white/50 rounded-3xl">Rien pour le moment.</p> : 
+              <p className="text-center p-12 italic bg-white/70 backdrop-blur-sm rounded-3xl font-bold">Rien pour le moment.</p> : 
               trajets.filter(t => view === 'liste_offres' ? !t.driver_name.includes('🙋') : t.driver_name.includes('🙋')).map(t => (
-                <div key={t.id} className={`bg-white p-5 rounded-[2rem] shadow-md border-l-8 ${view === 'liste_offres' ? 'border-[#4A86B4]' : 'border-[#8E44AD]'}`}>
+                <div key={t.id} className={`bg-white/95 p-5 rounded-[2rem] shadow-md border-l-8 ${view === 'liste_offres' ? 'border-[#4A86B4]' : 'border-[#8E44AD]'}`}>
                   <div className="flex justify-between items-start mb-2">
                     <p className={`font-black text-xl uppercase leading-none ${view === 'liste_offres' ? 'text-[#4A86B4]' : 'text-[#8E44AD]'}`}>{t.origin} ➔ {t.destination}</p>
                     {t.driver_id === currentUser?.telephone && (
@@ -178,7 +184,7 @@ export default function App() {
           <div className="space-y-4 px-2">
             <div className="bg-white/95 p-4 rounded-3xl shadow-xl border-4 border-[#4A86B4] text-center space-y-2">
               <div className="flex items-center justify-center gap-4">
-                <div className="w-12 h-12 bg-[#4A86B4] rounded-full flex items-center justify-center text-white shadow-inner"><User size={26} /></div>
+                <div className="w-12 h-12 bg-[#4A86B4] rounded-full flex items-center justify-center text-white"><User size={26} /></div>
                 <div className="text-left font-black">
                   <h2 className="text-lg uppercase leading-none">{currentUser?.nom}</h2>
                   <p className="text-md text-[#4A86B4]">{currentUser?.telephone}</p>
@@ -197,12 +203,12 @@ export default function App() {
               )}
             </div>
             
-            <div className="bg-white/90 p-4 rounded-3xl border-4 border-gray-400 space-y-2 text-center shadow-md">
+            <div className="bg-white/90 p-4 rounded-3xl border-4 border-gray-400 space-y-2 text-center shadow-md backdrop-blur-sm">
               <h3 className="font-black text-black flex items-center justify-center gap-2 uppercase text-[13px]"><ShieldCheck size={20}/> Sécurité des données</h3>
-              <p className="text-sm font-black leading-tight text-gray-700 italic">Outil villageois solidaire. Vos données (Nom, Tél) ne servent qu'à la mise en relation. Aucun traçage, aucune publicité.</p>
+              <p className="text-sm font-black leading-tight text-gray-700 italic">Outil villageois solidaire. Vos données ne servent qu'à la mise en relation. Aucun traçage, aucune publicité.</p>
             </div>
 
-            <div className="bg-white p-3 rounded-2xl border-4 border-[#4A86B4] text-center shadow-md">
+            <div className="bg-white/90 p-3 rounded-2xl border-4 border-[#4A86B4] text-center shadow-md backdrop-blur-sm">
               <p className="text-md font-black text-[#4A86B4] uppercase leading-none tracking-tight">VERSION {VERSION}</p>
               <p className="text-[12px] font-black text-[#4A86B4] uppercase mt-1 italic tracking-tight">Gracieusement propulsé par Chris TAPOR</p>
             </div>
@@ -211,7 +217,7 @@ export default function App() {
       </main>
 
       {currentUser && (
-        <nav className="fixed bottom-0 w-full bg-white border-t-8 border-[#4A86B4] flex justify-around p-2 shadow-2xl z-30">
+        <nav className="fixed bottom-0 w-full bg-white/90 backdrop-blur-md border-t-8 border-[#4A86B4] flex justify-around p-2 shadow-2xl z-30">
           <button onClick={() => {setView('trajets'); setConfirmLogout(false);}} className={`flex flex-col items-center font-black text-[10px] uppercase ${view === 'trajets' || view.includes('liste') || view === 'nouveau' ? 'text-[#4A86B4]' : 'text-gray-400'}`}><Car size={32} /> Accueil</button>
           <button onClick={() => {setView('messages'); setConfirmLogout(false);}} className={`flex flex-col items-center font-black text-[10px] uppercase ${view === 'messages' ? 'text-[#4A86B4]' : 'text-gray-400'}`}><MessageCircle size={32} /> Messages</button>
           <button onClick={() => {setView('parametres'); setConfirmLogout(false);}} className={`flex flex-col items-center font-black text-[10px] uppercase ${view === 'parametres' ? 'text-[#4A86B4]' : 'text-gray-400'}`}><ShieldCheck size={32} /> Paramètres</button>
