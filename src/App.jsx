@@ -157,7 +157,7 @@ export default function App() {
             
             <div className="space-y-1">
               <input type="text" placeholder="NOM (FACULTATIF)" value={loginNomFamille} onChange={(e)=>setLoginNomFamille(e.target.value)} className="w-full p-4 text-lg rounded-xl border-4 border-gray-100 font-bold bg-gray-50/50 select-text" />
-              <p className="text-[10px] font-black text-gray-400 uppercase italic px-2 tracking-tight">Seule l'initiale suivie d'un point sera affichée</p>
+              <p className="text-[10px] font-black text-black uppercase italic px-2 tracking-tight">Seule l'initiale suivie d'un point sera affichée</p>
             </div>
 
             <input type="tel" placeholder="TÉLÉPHONE" value={loginTel} onChange={(e)=>setLoginTel(e.target.value)} required className="w-full p-4 text-lg rounded-xl border-4 border-gray-100 font-bold select-text" />
