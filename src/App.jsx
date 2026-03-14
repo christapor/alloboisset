@@ -20,7 +20,7 @@ export default function App() {
   const [heureTrajet, setHeureTrajet] = useState('');
 
   const VERSION = "1.33"; 
-  const EMAIL_ADMIN = "ton-email@exemple.com"; // REMPLACE PAR TON EMAIL ICI
+  const EMAIL_ADMIN = "christapor@gmail.com"; // REMPLACE PAR TON EMAIL ICI
 
   useEffect(() => {
     const savedUser = localStorage.getItem('user_boisset');
