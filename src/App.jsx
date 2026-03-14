@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from './lib/supabaseClient';
-import { Car, User, MessageCircle, Plus, ArrowLeft, Trash2, Phone, ShieldCheck, Users, Edit } from 'lucide-react';
+import { Car, User, MessageCircle, Plus, ArrowLeft, Trash2, Phone, ShieldCheck, Users, Edit, Info, HelpCircle } from 'lucide-react';
 
 export default function App() {
   const [currentUser, setCurrentUser] = useState(null);
@@ -19,8 +19,8 @@ export default function App() {
   const [dateTrajet, setDateTrajet] = useState('');
   const [heureTrajet, setHeureTrajet] = useState('');
 
-  const VERSION = "1.32"; 
-  const EMAIL_ADMIN = "ton-email@exemple.com"; 
+  const VERSION = "1.33"; 
+  const EMAIL_ADMIN = "ton-email@exemple.com"; // REMPLACE PAR TON EMAIL ICI
 
   useEffect(() => {
     const savedUser = localStorage.getItem('user_boisset');
@@ -55,7 +55,7 @@ export default function App() {
     }
     const { data: profile } = await supabase.from('profiles').select('*').eq('phone', loginTel).maybeSingle();
     if (profile && profile.pin !== loginPin) {
-      return alert(`Code PIN incorrect ! Aide : ${EMAIL_ADMIN}`);
+      return alert("Code PIN incorrect !");
     } else if (!profile) {
       await supabase.from('profiles').insert([{ phone: loginTel, pin: loginPin, name: loginPrenom.trim() }]);
     }
@@ -67,16 +67,6 @@ export default function App() {
     setView('trajets');
   };
 
-  const ouvrirModification = (t) => {
-    setEditId(t.id);
-    setDepart(t.origin);
-    setArrivee(t.destination);
-    const [d, h] = t.departure_time.split(' ');
-    setDateTrajet(d); setHeureTrajet(h);
-    setIsDemande(t.driver_name.includes('🙋'));
-    setView('nouveau');
-  };
-
   const publierTrajet = async () => {
     if (!arrivee || !dateTrajet || !heureTrajet) return alert("Champs vides !");
     const prefixe = isDemande ? "🙋 " : "🚗 ";
@@ -85,14 +75,7 @@ export default function App() {
       driver_id: currentUser.telephone, driver_name: prefixe + currentUser.nom
     };
     const { error } = editId ? await supabase.from('rides').update(trajetData).eq('id', editId) : await supabase.from('rides').insert([trajetData]);
-    if (!error) { setArrivee(''); setEditId(null); chargerTrajets(); setView('liste'); }
-  };
-
-  const supprimerTrajet = async (id) => {
-    if (window.confirm("Supprimer ce trajet ?")) {
-      const { error } = await supabase.from('rides').delete().eq('id', id);
-      if (!error) chargerTrajets();
-    }
+    if (!error) { setArrivee(''); setEditId(null); chargerTrajets(); setView('trajets'); }
   };
 
   const formatMaDate = (d) => {
@@ -107,86 +90,87 @@ export default function App() {
       
       <header className="bg-white/95 shadow-xl p-3 sticky top-0 z-20 border-b-8 border-[#4A86B4] flex flex-col items-center">
         <div className="flex items-center gap-5 w-full justify-center">
-          <img src="/alloboisset_logo.jpg" className="h-14 w-14 object-contain" alt="Logo" />
+          <img src="/alloboisset_logo.jpg" className="h-12 w-12 object-contain" alt="Logo" />
           <div className="flex flex-col text-center">
-            <h1 className="text-2xl font-black text-[#4A86B4] uppercase leading-none">AlloBoisset</h1>
-            <p className="text-[10px] font-black text-[#5B8C4E] uppercase tracking-[0.2em] mt-1 border-t-2 border-[#5B8C4E] pt-1">Covoiturage Villageois</p>
+            <h1 className="text-xl font-black text-[#4A86B4] uppercase leading-none tracking-tighter">AlloBoisset</h1>
+            <p className="text-[9px] font-black text-[#5B8C4E] uppercase tracking-[0.2em] mt-1 border-t-2 border-[#5B8C4E] pt-1">Covoiturage Villageois</p>
           </div>
         </div>
       </header>
 
-      <main className="flex-1 max-w-xl mx-auto w-full p-4 pb-32">
+      <main className="flex-1 max-w-xl mx-auto w-full p-3 pb-32">
         {view === 'login' && (
-          <form onSubmit={handleLogin} className="bg-white/95 p-6 rounded-3xl shadow-xl mt-4 border-2 border-[#4A86B4] space-y-4">
-            <h2 className="text-xl font-black text-center uppercase">Identification</h2>
+          <form onSubmit={handleLogin} className="bg-white/95 p-6 rounded-3xl shadow-xl mt-2 border-2 border-[#4A86B4] space-y-4 text-center">
+            <h2 className="text-xl font-black uppercase italic">Identification</h2>
             <input type="text" placeholder="PRÉNOM" value={loginPrenom} onChange={(e)=>setLoginPrenom(e.target.value)} required className="w-full p-4 text-lg rounded-xl border-4 border-gray-100 font-bold" />
             <input type="text" placeholder="NOM (FACULTATIF)" value={loginNomFamille} onChange={(e)=>setLoginNomFamille(e.target.value)} className="w-full p-4 text-lg rounded-xl border-4 border-gray-100 font-bold bg-gray-50/50" />
             <input type="tel" placeholder="TÉLÉPHONE" value={loginTel} onChange={(e)=>setLoginTel(e.target.value)} required className="w-full p-4 text-lg rounded-xl border-4 border-gray-100 font-bold" />
-            <input type="password" inputMode="numeric" maxLength="4" placeholder="CODE PIN (4 CHIFFRES)" value={loginPin} onChange={(e)=>setLoginPin(e.target.value.replace(/\D/g,''))} required className="w-full p-4 text-lg rounded-xl border-4 border-orange-200 font-bold text-center placeholder:tracking-normal placeholder:text-gray-500" />
+            <input type="password" inputMode="numeric" maxLength="4" placeholder="CODE PIN (4 CHIFFRES)" value={loginPin} onChange={(e)=>setLoginPin(e.target.value.replace(/\D/g,''))} required className="w-full p-4 text-lg rounded-xl border-4 border-orange-200 font-bold text-center placeholder:tracking-normal" />
             <button type="submit" className="w-full bg-[#4A86B4] text-white p-4 rounded-xl text-xl font-black uppercase shadow-lg">Entrer</button>
-            <p className="text-[9px] text-center font-bold text-gray-400 uppercase tracking-tighter italic">PIN oublié ? {EMAIL_ADMIN}</p>
+            <div className="pt-2 border-t border-gray-100">
+              <p className="text-xs font-bold text-gray-400 uppercase">PIN oublié ?</p>
+              <a href={`mailto:${EMAIL_ADMIN}`} className="text-sm font-black text-[#4A86B4] underline decoration-2 underline-offset-4">{EMAIL_ADMIN}</a>
+            </div>
           </form>
         )}
 
         {view === 'trajets' && (
-          <div className="space-y-3 mt-2">
-            <div className="flex justify-center mb-2">
-               <span className="bg-white px-6 py-2 rounded-full font-black text-lg text-[#4A86B4] shadow-[0_4px_15px_rgba(0,0,0,0.3)] border-2 border-[#4A86B4]">Bonjour {currentUser?.nom}</span>
+          <div className="grid grid-cols-1 gap-3 mt-1">
+            <div className="flex justify-center mb-1">
+               <span className="bg-white px-5 py-1.5 rounded-full font-black text-md text-[#4A86B4] shadow-md border-2 border-[#4A86B4]">Bonjour {currentUser?.nom}</span>
             </div>
-            <button onClick={() => {chargerTrajets(); setView('liste');}} className="flex flex-col items-center justify-center p-3 rounded-[1.5rem] shadow-xl bg-[#4A86B4] w-full text-white font-black text-lg uppercase active:scale-95 transition-transform"><Car size={35} className="mb-1" />Chercher</button>
-            <button onClick={() => {setIsDemande(false); setEditId(null); setView('nouveau');}} className="flex flex-col items-center justify-center p-3 rounded-[1.5rem] shadow-xl bg-[#5B8C4E] w-full text-white font-black text-lg uppercase active:scale-95 transition-transform"><Plus size={35} className="mb-1" />Proposer</button>
-            <button onClick={() => {setIsDemande(true); setEditId(null); setView('nouveau');}} className="flex flex-col items-center justify-center p-3 rounded-[1.5rem] shadow-xl bg-[#E67E22] w-full text-white font-black text-lg uppercase active:scale-95 transition-transform"><Users size={35} className="mb-1" />Demander</button>
+            <button onClick={() => {chargerTrajets(); setView('liste_offres');}} className="flex flex-col items-center justify-center p-3 rounded-[1.5rem] shadow-lg bg-[#4A86B4] w-full text-white font-black text-lg uppercase active:scale-95 transition-transform"><Car size={32} className="mb-1" />Je vous emmène</button>
+            <button onClick={() => {chargerTrajets(); setView('liste_demandes');}} className="flex flex-col items-center justify-center p-3 rounded-[1.5rem] shadow-lg bg-[#8E44AD] w-full text-white font-black text-lg uppercase active:scale-95 transition-transform"><Users size={32} className="mb-1" />Emmenez-moi</button>
+            <div className="grid grid-cols-2 gap-3 pt-2">
+              <button onClick={() => {setIsDemande(false); setEditId(null); setView('nouveau');}} className="flex flex-col items-center justify-center p-3 rounded-[1.5rem] shadow-lg bg-[#5B8C4E] text-white font-black text-sm uppercase active:scale-95 transition-transform"><Plus size={30} className="mb-1" />Proposer</button>
+              <button onClick={() => {setIsDemande(true); setEditId(null); setView('nouveau');}} className="flex flex-col items-center justify-center p-3 rounded-[1.5rem] shadow-lg bg-[#E67E22] text-white font-black text-sm uppercase active:scale-95 transition-transform"><HelpCircle size={30} className="mb-1" />Demander</button>
+            </div>
+          </div>
+        )}
+
+        {(view === 'liste_offres' || view === 'liste_demandes') && (
+          <div className="space-y-4">
+            <button onClick={() => setView('trajets')} className="bg-white border-[6px] border-[#4A86B4] text-[#4A86B4] px-5 py-2 rounded-xl font-black flex items-center gap-2 text-lg shadow-xl"><ArrowLeft size={28} /> RETOUR</button>
+            <h2 className="text-xl font-black uppercase italic">{view === 'liste_offres' ? '🚗 Voitures disponibles' : '🙋 Voisins à pied'}</h2>
+            {trajets.filter(t => view === 'liste_offres' ? !t.driver_name.includes('🙋') : t.driver_name.includes('🙋')).length === 0 ? 
+              <p className="text-center p-12 italic bg-white/50 rounded-3xl">Rien pour le moment.</p> : 
+              trajets.filter(t => view === 'liste_offres' ? !t.driver_name.includes('🙋') : t.driver_name.includes('🙋')).map(t => (
+                <div key={t.id} className={`bg-white p-5 rounded-[2rem] shadow-md border-l-8 ${view === 'liste_offres' ? 'border-[#4A86B4]' : 'border-[#8E44AD]'}`}>
+                  <div className="flex justify-between items-start mb-2">
+                    <p className={`font-black text-xl uppercase leading-none ${view === 'liste_offres' ? 'text-[#4A86B4]' : 'text-[#8E44AD]'}`}>{t.origin} ➔ {t.destination}</p>
+                    {t.driver_id === currentUser?.telephone && (
+                      <div className="flex gap-2">
+                        <button onClick={() => {setEditId(t.id); setDepart(t.origin); setArrivee(t.destination); setDateTrajet(t.departure_time.split(' ')[0]); setHeureTrajet(t.departure_time.split(' ')[1]); setIsDemande(t.driver_name.includes('🙋')); setView('nouveau');}} className="text-blue-500 bg-blue-50 p-2 rounded-full"><Edit size={20}/></button>
+                        <button onClick={async () => {if(window.confirm("Supprimer ?")){await supabase.from('rides').delete().eq('id', t.id); chargerTrajets();}}} className="text-red-500 bg-red-50 p-2 rounded-full"><Trash2 size={20}/></button>
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex justify-between items-center mb-4 text-gray-600 font-bold italic text-sm">
+                    <span>{formatMaDate(t.departure_time)} à {t.departure_time.split(' ')[1]}</span>
+                    <span className="text-[10px] bg-gray-100 px-2 py-1 rounded-full uppercase">{t.driver_name.replace('🙋 ', '').replace('🚗 ', '')}</span>
+                  </div>
+                  <a href={`tel:${t.driver_id}`} className={`block w-full text-white p-3 rounded-xl font-black text-lg text-center uppercase flex items-center justify-center gap-3 shadow-lg ${view === 'liste_offres' ? 'bg-[#4A86B4]' : 'bg-[#8E44AD]'}`}>
+                    <Phone size={20}/> {view === 'liste_offres' ? 'Réserver ma place' : "Proposer de l'emmener"}
+                  </a>
+                </div>
+              ))
+            }
           </div>
         )}
 
         {view === 'nouveau' && (
           <div className="space-y-4">
-            <button onClick={() => setView('trajets')} className="bg-white border-[6px] border-[#4A86B4] text-[#4A86B4] px-5 py-3 rounded-xl font-black flex items-center gap-2 text-xl shadow-xl active:scale-95 transition-transform"><ArrowLeft size={32} /> RETOUR</button>
+            <button onClick={() => setView('trajets')} className="bg-white border-[6px] border-[#4A86B4] text-[#4A86B4] px-5 py-2 rounded-xl font-black flex items-center gap-2 text-lg shadow-xl"><ArrowLeft size={28} /> RETOUR</button>
             <div className={`bg-white/95 p-6 rounded-3xl shadow-lg space-y-4 border-4 ${isDemande ? 'border-[#E67E22]' : 'border-[#5B8C4E]'}`}>
-              <h2 className={`text-xl font-black text-center uppercase ${isDemande ? 'text-[#E67E22]' : 'text-[#5B8C4E]'}`}>{editId ? 'Modifier' : (isDemande ? 'Je cherche un trajet' : 'Je propose un trajet')}</h2>
-              <input type="text" value={depart} onChange={(e)=>setDepart(e.target.value)} className="w-full p-4 border-2 rounded-xl font-bold" />
-              <input type="text" placeholder="Destination ?" value={arrivee} onChange={(e)=>setArrivee(e.target.value)} className="w-full p-4 border-2 rounded-xl font-bold" />
-              <div className="grid grid-cols-2 gap-2 text-center">
+              <h2 className={`text-xl font-black text-center uppercase ${isDemande ? 'text-[#E67E22]' : 'text-[#5B8C4E]'}`}>{editId ? 'Modifier' : (isDemande ? 'Je cherche' : 'Je propose')}</h2>
+              <input type="text" value={depart} onChange={(e)=>setDepart(e.target.value)} className="w-full p-4 border-2 rounded-xl font-bold text-center" />
+              <input type="text" placeholder="DESTINATION ?" value={arrivee} onChange={(e)=>setArrivee(e.target.value)} className="w-full p-4 border-2 rounded-xl font-bold text-center uppercase" />
+              <div className="grid grid-cols-2 gap-2">
                 <input type="date" value={dateTrajet} onChange={(e)=>setDateTrajet(e.target.value)} className="w-full p-2 border-2 rounded-xl font-bold text-sm" />
                 <input type="time" value={heureTrajet} onChange={(e)=>setHeureTrajet(e.target.value)} className="w-full p-2 border-2 rounded-xl font-bold text-sm" />
               </div>
-              <button onClick={publierTrajet} className={`w-full text-white p-5 rounded-2xl font-black text-xl uppercase shadow-lg active:scale-95 transition-transform ${isDemande ? 'bg-[#E67E22]' : 'bg-[#5B8C4E]'}`}>{editId ? 'Enregistrer' : 'Publier'}</button>
+              <button onClick={publierTrajet} className={`w-full text-white p-5 rounded-2xl font-black text-xl uppercase shadow-lg ${isDemande ? 'bg-[#E67E22]' : 'bg-[#5B8C4E]'}`}>{editId ? 'Enregistrer' : 'Publier'}</button>
             </div>
-          </div>
-        )}
-
-        {view === 'liste' && (
-          <div className="space-y-4">
-            <button onClick={() => setView('trajets')} className="bg-white border-[6px] border-[#4A86B4] text-[#4A86B4] px-5 py-3 rounded-xl font-black flex items-center gap-2 text-xl shadow-xl active:scale-95 transition-transform"><ArrowLeft size={32} /> RETOUR</button>
-            <h2 className="text-2xl font-black uppercase">Trajets prévus</h2>
-            {trajets.length === 0 ? <p className="text-center p-12 italic bg-white/50 rounded-3xl">Aucun trajet à venir.</p> : 
-              trajets.map(t => {
-                const estDemande = t.driver_name.includes('🙋');
-                return (
-                  <div key={t.id} className={`bg-white p-5 rounded-[2rem] shadow-md border-l-[12px] ${estDemande ? 'border-[#E67E22]' : 'border-[#4A86B4]'}`}>
-                    <div className="flex justify-between items-start mb-1">
-                      <span className={`text-[10px] font-black px-2 py-0.5 rounded uppercase text-white ${estDemande ? 'bg-[#E67E22]' : 'bg-[#4A86B4]'}`}>
-                        {estDemande ? '🙋 Cherche' : '🚗 Propose'}
-                      </span>
-                      {t.driver_id === currentUser?.telephone && (
-                        <div className="flex gap-2">
-                          <button onClick={() => ouvrirModification(t)} className="text-blue-500 bg-blue-50 p-2 rounded-full shadow-sm"><Edit size={20}/></button>
-                          <button onClick={() => supprimerTrajet(t.id)} className="text-red-500 bg-red-50 p-2 rounded-full shadow-sm"><Trash2 size={20}/></button>
-                        </div>
-                      )}
-                    </div>
-                    <p className={`font-black text-xl uppercase leading-tight mb-2 ${estDemande ? 'text-[#E67E22]' : 'text-[#4A86B4]'}`}>{t.origin} ➔ {t.destination}</p>
-                    <div className="flex justify-between items-center mb-4 text-gray-700 font-black text-sm italic">
-                      <span>{formatMaDate(t.departure_time)} à {t.departure_time.split(' ')[1]}</span>
-                      <span className="text-[10px] bg-gray-100 px-2 py-1 rounded-full uppercase text-gray-500">{t.driver_name.replace('🙋 ', '').replace('🚗 ', '')}</span>
-                    </div>
-                    <a href={`tel:${t.driver_id}`} className={`block w-full text-white p-3 rounded-xl font-black text-lg text-center uppercase flex items-center justify-center gap-3 shadow-md ${estDemande ? 'bg-[#E67E22]' : 'bg-[#4A86B4]'}`}>
-                      <Phone size={20}/> {estDemande ? "L'emmener" : "Réserver"}
-                    </a>
-                  </div>
-                );
-              })
-            }
           </div>
         )}
 
@@ -204,7 +188,7 @@ export default function App() {
                 <button onClick={() => setConfirmLogout(true)} className="w-full border-2 border-red-500 text-red-500 p-2 rounded-xl font-black uppercase text-[12px]">Se déconnecter</button>
               ) : (
                 <div className="flex flex-col gap-2 p-2 bg-red-50 rounded-xl border-2 border-red-200">
-                  <p className="font-black text-red-600 text-sm italic">Quitter ?</p>
+                  <p className="font-black text-red-600 text-sm italic leading-tight">Voulez-vous vraiment vous déconnecter ?</p>
                   <div className="flex gap-2 justify-center">
                     <button onClick={() => {localStorage.removeItem('user_boisset'); setView('login'); setCurrentUser(null); setConfirmLogout(false);}} className="bg-red-600 text-white px-6 py-2 rounded-lg font-black text-sm">OUI</button>
                     <button onClick={() => setConfirmLogout(false)} className="bg-gray-200 text-gray-700 px-6 py-2 rounded-lg font-black text-sm">NON</button>
@@ -212,6 +196,12 @@ export default function App() {
                 </div>
               )}
             </div>
+            
+            <div className="bg-white/90 p-4 rounded-3xl border-4 border-gray-400 space-y-2">
+              <h3 className="font-black text-black flex items-center gap-2 uppercase text-[13px]"><ShieldCheck size={20}/> Charte de sécurité</h3>
+              <p className="text-sm font-black leading-tight text-gray-700">Outil villageois solidaire. Vos données (Nom, Tél) ne servent qu'à la mise en relation. Aucun traçage, aucune pub. Votre code PIN est stocké en sécurité dans la base de données.</p>
+            </div>
+
             <div className="bg-white p-3 rounded-2xl border-4 border-[#4A86B4] text-center shadow-md">
               <p className="text-md font-black text-[#4A86B4] uppercase leading-none">VERSION {VERSION}</p>
               <p className="text-[12px] font-black text-[#4A86B4] uppercase mt-1">Propulsé par Chris TAPOR</p>
@@ -222,7 +212,7 @@ export default function App() {
 
       {currentUser && (
         <nav className="fixed bottom-0 w-full bg-white border-t-8 border-[#4A86B4] flex justify-around p-2 shadow-2xl z-30">
-          <button onClick={() => {setView('trajets'); setConfirmLogout(false);}} className={`flex flex-col items-center font-black text-[10px] uppercase ${['trajets', 'liste', 'nouveau'].includes(view) ? 'text-[#4A86B4]' : 'text-gray-400'}`}><Car size={32} /> Accueil</button>
+          <button onClick={() => {setView('trajets'); setConfirmLogout(false);}} className={`flex flex-col items-center font-black text-[10px] uppercase ${view === 'trajets' || view.includes('liste') || view === 'nouveau' ? 'text-[#4A86B4]' : 'text-gray-400'}`}><Car size={32} /> Accueil</button>
           <button onClick={() => {setView('messages'); setConfirmLogout(false);}} className={`flex flex-col items-center font-black text-[10px] uppercase ${view === 'messages' ? 'text-[#4A86B4]' : 'text-gray-400'}`}><MessageCircle size={32} /> Messages</button>
           <button onClick={() => {setView('parametres'); setConfirmLogout(false);}} className={`flex flex-col items-center font-black text-[10px] uppercase ${view === 'parametres' ? 'text-[#4A86B4]' : 'text-gray-400'}`}><ShieldCheck size={32} /> Paramètres</button>
         </nav>
