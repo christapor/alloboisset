@@ -21,7 +21,7 @@ export default function App() {
   const [dateTrajet, setDateTrajet] = useState('');
   const [heureTrajet, setHeureTrajet] = useState('');
 
-  const VERSION = "1.44"; 
+  const VERSION = "1.45"; 
   const EMAIL_ADMIN = "christapor@gmail.com"; 
   
   // LISTE DES MODÉRATEURS (CHRIS ET FLORIAN)
@@ -29,6 +29,7 @@ export default function App() {
 
   const LISTE_NOIRE = ["merde", "putain", "connard", "salope"]; 
 
+  // Lien mailto pré-rempli pour le PIN
   const MAILTO_PIN = `mailto:${EMAIL_ADMIN}?subject=AlloBoisset%20:%20Code%20PIN%20oubli%C3%A9&body=Bonjour%20Chris,%0D%0A%0D%0AJ'ai%20oubli%C3%A9%20mon%20code%20PIN%20pour%20l'application%20AlloBoisset.%0D%0AMon%20num%C3%A9ro%20de%20t%C3%A9l%C3%A9phone%20est%20le%20:%20`;
 
   useEffect(() => {
@@ -76,7 +77,10 @@ export default function App() {
     if (e) e.preventDefault();
     if (!nouveauMessage.trim()) return;
     const messageFiltre = filtrerTexte(nouveauMessage.trim());
-    const { error } = await supabase.from('village_messages').insert([{ sender_name: currentUser.nom, text: messageFiltre }]);
+    const { error } = await supabase.from('village_messages').insert([{ 
+      sender_name: currentUser.nom, 
+      text: messageFiltre 
+    }]);
     if (!error) { setNouveauMessage(''); chargerMessages(); }
   };
 
@@ -130,6 +134,20 @@ export default function App() {
     if(!d) return "";
     const parts = d.split(' ')[0].split('-');
     return `${parts[2]}/${parts[1]}/${parts[0].slice(2)}`;
+  };
+
+  // Helper pour formater la date d'un message (ex: 15 mars 2026, à 23h52)
+  const formatDateTimeMessage = (dateStr) => {
+    if(!dateStr) return "";
+    const dateObj = new Date(dateStr);
+    const optionsDate = { day: 'numeric', month: 'long', year: 'numeric' };
+    const datePart = dateObj.toLocaleDateString('fr-FR', optionsDate);
+    
+    const h = String(dateObj.getHours()).padStart(2, '0');
+    const m = String(dateObj.getMinutes()).padStart(2, '0');
+    const timePart = `${h}h${m}`;
+    
+    return `le ${datePart}, à ${timePart}`;
   };
 
   const estAdmin = (tel) => LISTE_ADMINS.includes(tel);
@@ -187,7 +205,7 @@ export default function App() {
         {view === 'aide' && (
           <div className="space-y-4">
             <button onClick={() => setView('parametres')} className="bg-white border-4 border-[#4A86B4] text-[#4A86B4] px-4 py-2 rounded-xl font-black flex items-center gap-2 mb-2 w-fit shadow-md"><ArrowLeft size={20} /> RETOUR</button>
-            <div className="bg-white/95 p-6 rounded-3xl shadow-xl space-y-6 overflow-y-auto">
+            <div className="bg-white/95 p-6 rounded-3xl shadow-xl space-y-6">
               <h2 className="text-xl font-black uppercase text-[#4A86B4] border-b-4 border-[#4A86B4] pb-2 text-center italic">Guide AlloBoisset</h2>
               <section className="space-y-2">
                 <h3 className="font-black text-[#4A86B4] uppercase flex items-center gap-2"><Car size={20}/> Covoiturer</h3>
@@ -217,10 +235,13 @@ export default function App() {
               <h2 className="text-center font-black uppercase text-gray-400 text-[10px] mb-2 tracking-widest italic">Le Mur du Village</h2>
               {messages.map(m => (
                 <div key={m.id} className={`relative max-w-[85%] p-3 rounded-2xl shadow-sm ${m.sender_name === currentUser?.nom ? 'bg-blue-50 ml-auto border-r-4 border-[#4A86B4]' : 'bg-gray-50 border-l-4 border-gray-300'}`}>
-                  <div className="flex justify-between items-center mb-1">
-                    <p className="text-[10px] font-black uppercase text-gray-500">{m.sender_name}</p>
+                  <div className="flex justify-between items-start mb-1 gap-2">
+                    <div className="font-black uppercase text-gray-500 leading-tight">
+                        <span className="text-sm">{m.sender_name}</span>
+                        <span className="text-[10px] lowercase italic ml-1">a écrit {formatDateTimeMessage(m.created_at)}</span>
+                    </div>
                     {estAdmin(currentUser?.telephone) && (
-                      <button onClick={() => supprimerMessage(m.id)} className="text-red-400 hover:text-red-600 transition-colors"><Trash2 size={14} /></button>
+                      <button onClick={() => supprimerMessage(m.id)} className="text-red-400 hover:text-red-600 shrink-0"><Trash2 size={14} /></button>
                     )}
                   </div>
                   <p className="text-sm font-bold leading-tight break-words whitespace-pre-wrap select-text">{m.text}</p>
@@ -229,7 +250,7 @@ export default function App() {
             </div>
             <form onSubmit={envoyerMessage} className="mt-3 flex items-end gap-2 bg-white p-2 rounded-2xl shadow-lg border-2 border-[#4A86B4]">
               <textarea value={nouveauMessage} onChange={(e)=>setNouveauMessage(e.target.value)} placeholder="Écrire au village..." rows="2" className="flex-1 p-2 bg-transparent font-bold text-sm resize-none focus:outline-none select-text" />
-              <button type="submit" className="bg-[#4A86B4] text-white p-3 rounded-xl shadow-md active:scale-95 transition-transform"><Send size={20}/></button>
+              <button type="submit" className="bg-[#4A86B4] text-white p-3 rounded-xl shadow-md active:scale-95"><Send size={20}/></button>
             </form>
           </div>
         )}
