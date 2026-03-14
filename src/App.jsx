@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from './lib/supabaseClient';
-import { Car, User, MessageCircle, Plus, ArrowLeft, Trash2, Phone, ShieldCheck, Users, Edit, Info, HelpCircle } from 'lucide-react';
+import { Car, User, MessageCircle, Plus, ArrowLeft, Trash2, Phone, ShieldCheck, Users, Edit, HelpCircle } from 'lucide-react';
 
 export default function App() {
   const [currentUser, setCurrentUser] = useState(null);
@@ -19,8 +19,8 @@ export default function App() {
   const [dateTrajet, setDateTrajet] = useState('');
   const [heureTrajet, setHeureTrajet] = useState('');
 
-  const VERSION = "1.33"; 
-  const EMAIL_ADMIN = "christapor@gmail.com"; // REMPLACE PAR TON EMAIL ICI
+  const VERSION = "1.34"; 
+  const EMAIL_ADMIN = "christapor@gmail.com"; 
 
   useEffect(() => {
     const savedUser = localStorage.getItem('user_boisset');
@@ -55,7 +55,7 @@ export default function App() {
     }
     const { data: profile } = await supabase.from('profiles').select('*').eq('phone', loginTel).maybeSingle();
     if (profile && profile.pin !== loginPin) {
-      return alert("Code PIN incorrect !");
+      return alert(`Code PIN incorrect ! Aide : ${EMAIL_ADMIN}`);
     } else if (!profile) {
       await supabase.from('profiles').insert([{ phone: loginTel, pin: loginPin, name: loginPrenom.trim() }]);
     }
@@ -63,7 +63,6 @@ export default function App() {
     const user = { nom: nomConvivial, telephone: loginTel, pin: loginPin };
     setCurrentUser(user);
     localStorage.setItem('user_boisset', JSON.stringify(user));
-    localStorage.setItem('last_tel', loginTel);
     setView('trajets');
   };
 
@@ -108,7 +107,7 @@ export default function App() {
             <input type="password" inputMode="numeric" maxLength="4" placeholder="CODE PIN (4 CHIFFRES)" value={loginPin} onChange={(e)=>setLoginPin(e.target.value.replace(/\D/g,''))} required className="w-full p-4 text-lg rounded-xl border-4 border-orange-200 font-bold text-center placeholder:tracking-normal" />
             <button type="submit" className="w-full bg-[#4A86B4] text-white p-4 rounded-xl text-xl font-black uppercase shadow-lg">Entrer</button>
             <div className="pt-2 border-t border-gray-100">
-              <p className="text-xs font-bold text-gray-400 uppercase">PIN oublié ?</p>
+              <p className="text-sm font-black text-black uppercase">PIN oublié ?</p>
               <a href={`mailto:${EMAIL_ADMIN}`} className="text-sm font-black text-[#4A86B4] underline decoration-2 underline-offset-4">{EMAIL_ADMIN}</a>
             </div>
           </form>
@@ -197,14 +196,14 @@ export default function App() {
               )}
             </div>
             
-            <div className="bg-white/90 p-4 rounded-3xl border-4 border-gray-400 space-y-2">
-              <h3 className="font-black text-black flex items-center gap-2 uppercase text-[13px]"><ShieldCheck size={20}/> Charte de sécurité</h3>
-              <p className="text-sm font-black leading-tight text-gray-700">Outil villageois solidaire. Vos données (Nom, Tél) ne servent qu'à la mise en relation. Aucun traçage, aucune pub. Votre code PIN est stocké en sécurité dans la base de données.</p>
+            <div className="bg-white/90 p-4 rounded-3xl border-4 border-gray-400 space-y-2 text-center">
+              <h3 className="font-black text-black flex items-center justify-center gap-2 uppercase text-[13px]"><ShieldCheck size={20}/> Sécurité des données</h3>
+              <p className="text-sm font-black leading-tight text-gray-700 italic">Outil villageois solidaire. Vos données (Nom, Tél) ne servent qu'à la mise en relation. Aucun traçage, aucune publicité.</p>
             </div>
 
             <div className="bg-white p-3 rounded-2xl border-4 border-[#4A86B4] text-center shadow-md">
               <p className="text-md font-black text-[#4A86B4] uppercase leading-none">VERSION {VERSION}</p>
-              <p className="text-[12px] font-black text-[#4A86B4] uppercase mt-1">Gracieusement propulsé par Chris TAPOR</p>
+              <p className="text-[12px] font-black text-[#4A86B4] uppercase mt-1 italic tracking-tight">Gracieusement propulsé par Chris TAPOR</p>
             </div>
           </div>
         )}
