@@ -16,7 +16,7 @@ export default function App() {
   const [dateTrajet, setDateTrajet] = useState('');
   const [heureTrajet, setHeureTrajet] = useState('');
 
-  const VERSION = "1.20"; 
+  const VERSION = "1.21"; 
 
   useEffect(() => {
     const savedUser = localStorage.getItem('user_boisset');
@@ -98,11 +98,11 @@ export default function App() {
         {view === 'login' && (
           <form onSubmit={handleLogin} className="bg-white/95 p-6 rounded-3xl shadow-xl mt-4 border-2 border-[#4A86B4] space-y-4">
             <h2 className="text-xl font-black text-center uppercase">Identification</h2>
-            <input type="text" placeholder="PRÉNOM" value={loginPrenom} onChange={(e)=>setLoginPrenom(e.target.value)} required className="w-full p-4 text-lg rounded-xl border-4 border-gray-100 font-bold" />
-            <input type="text" placeholder="NOM (FACULTATIF)" value={loginNomFamille} onChange={(e)=>setLoginNomFamille(e.target.value)} className="w-full p-4 text-lg rounded-xl border-4 border-gray-100 font-bold bg-gray-50/50" />
-            <input type="tel" placeholder="TÉLÉPHONE" value={loginTel} onChange={(e)=>setLoginTel(e.target.value)} required className="w-full p-4 text-lg rounded-xl border-4 border-gray-100 font-bold" />
-            <input type="password" inputMode="numeric" maxLength="4" placeholder="CODE PIN (4 CHIFFRES)" value={loginPin} onChange={(e)=>setLoginPin(e.target.value.replace(/\D/g,''))} required className="w-full p-4 text-lg rounded-xl border-4 border-orange-200 font-bold text-center tracking-[0.5em]" />
-            <button type="submit" className="w-full bg-[#4A86B4] text-white p-4 rounded-xl text-xl font-black uppercase shadow-lg">Entrer</button>
+            <input type="text" placeholder="PRÉNOM" value={loginPrenom} onChange={(e)=>setLoginPrenom(e.target.value)} required className="w-full p-4 text-lg rounded-xl border-4 border-gray-100 font-bold placeholder-gray-400" />
+            <input type="text" placeholder="NOM (FACULTATIF)" value={loginNomFamille} onChange={(e)=>setLoginNomFamille(e.target.value)} className="w-full p-4 text-lg rounded-xl border-4 border-gray-100 font-bold bg-gray-50/50 placeholder-gray-400" />
+            <input type="tel" placeholder="TÉLÉPHONE" value={loginTel} onChange={(e)=>setLoginTel(e.target.value)} required className="w-full p-4 text-lg rounded-xl border-4 border-gray-100 font-bold placeholder-gray-400" />
+            <input type="password" inputMode="numeric" maxLength="4" placeholder="CODE PIN (4 CHIFFRES)" value={loginPin} onChange={(e)=>setLoginPin(e.target.value.replace(/\D/g,''))} required className="w-full p-4 text-lg rounded-xl border-4 border-orange-200 font-bold text-center tracking-[0.2em] placeholder-gray-500 placeholder:tracking-normal" />
+            <button type="submit" className="w-full bg-[#4A86B4] text-white p-4 rounded-xl text-xl font-black uppercase shadow-lg active:scale-95 transition-transform">Entrer</button>
           </form>
         )}
 
@@ -116,7 +116,7 @@ export default function App() {
 
         {view === 'nouveau' && (
           <div className="space-y-4">
-            <button onClick={() => setView('trajets')} className="bg-white border-[6px] border-[#4A86B4] text-[#4A86B4] px-5 py-3 rounded-xl font-black flex items-center gap-2 text-xl shadow-xl"><ArrowLeft size={32} /> RETOUR</button>
+            <button onClick={() => setView('trajets')} className="bg-white border-[6px] border-[#4A86B4] text-[#4A86B4] px-5 py-3 rounded-xl font-black flex items-center gap-2 text-xl shadow-xl active:scale-95 transition-transform"><ArrowLeft size={32} /> RETOUR</button>
             <div className="bg-white/95 p-6 rounded-3xl shadow-lg space-y-4 border-2 border-[#5B8C4E]">
               <h2 className="text-xl font-black text-center uppercase text-[#5B8C4E]">Nouveau trajet</h2>
               <input type="text" value={depart} onChange={(e)=>setDepart(e.target.value)} className="w-full p-4 border-2 rounded-xl font-bold" />
@@ -125,14 +125,14 @@ export default function App() {
                 <div className="space-y-1"><label className="text-xs font-bold uppercase">Date</label><input type="date" value={dateTrajet} onChange={(e)=>setDateTrajet(e.target.value)} className="w-full p-2 border-2 rounded-xl font-bold text-sm" /></div>
                 <div className="space-y-1"><label className="text-xs font-bold uppercase">Heure</label><input type="time" value={heureTrajet} onChange={(e)=>setHeureTrajet(e.target.value)} className="w-full p-2 border-2 rounded-xl font-bold text-sm" /></div>
               </div>
-              <button onClick={publierTrajet} className="w-full bg-[#5B8C4E] text-white p-5 rounded-2xl font-black text-xl uppercase">Publier</button>
+              <button onClick={publierTrajet} className="w-full bg-[#5B8C4E] text-white p-5 rounded-2xl font-black text-xl uppercase shadow-lg">Publier</button>
             </div>
           </div>
         )}
 
         {view === 'liste' && (
           <div className="space-y-4">
-            <button onClick={() => setView('trajets')} className="bg-white border-[6px] border-[#4A86B4] text-[#4A86B4] px-5 py-3 rounded-xl font-black flex items-center gap-2 text-xl shadow-xl"><ArrowLeft size={32} /> RETOUR</button>
+            <button onClick={() => setView('trajets')} className="bg-white border-[6px] border-[#4A86B4] text-[#4A86B4] px-5 py-3 rounded-xl font-black flex items-center gap-2 text-xl shadow-xl active:scale-95 transition-transform"><ArrowLeft size={32} /> RETOUR</button>
             <h2 className="text-2xl font-black uppercase">Trajets prévus</h2>
             {trajets.length === 0 ? <p className="text-center p-12 italic bg-white/50 rounded-3xl">Aucun trajet pour l'instant.</p> : 
               trajets.map(t => (
@@ -148,7 +148,7 @@ export default function App() {
                     </div>
                     <span className="text-xs font-bold bg-gray-100 px-2 py-1 rounded text-gray-500">{t.driver_name}</span>
                   </div>
-                  <a href={`tel:${t.driver_id}`} className="block w-full bg-[#4A86B4] text-white p-4 rounded-xl font-black text-2xl text-center uppercase flex items-center justify-center gap-3"><Phone size={24}/> Appeler</a>
+                  <a href={`tel:${t.driver_id}`} className="block w-full bg-[#4A86B4] text-white p-4 rounded-xl font-black text-2xl text-center uppercase shadow-md flex items-center justify-center gap-3"><Phone size={24}/> Appeler</a>
                 </div>
               ))
             }
@@ -160,36 +160,43 @@ export default function App() {
             <MessageCircle size={100} className="mx-auto text-[#4A86B4]" />
             <h2 className="text-3xl font-black uppercase text-[#4A86B4]">Messagerie</h2>
             <div className="bg-white/95 p-8 rounded-3xl border-4 border-dashed border-[#4A86B4] shadow-lg">
-              <p className="text-xl font-bold italic text-gray-800">Bientôt disponible !</p>
+              <p className="text-xl font-bold italic text-gray-800">Bientôt disponible !<br/><br/>Appelez directement votre chauffeur en attendant.</p>
             </div>
           </div>
         )}
 
         {view === 'parametres' && (
-          <div className="space-y-4">
-            <div className="bg-white/95 p-6 rounded-3xl shadow-xl border-4 border-[#4A86B4] text-center space-y-4">
+          <div className="space-y-4 px-2">
+            <div className="bg-white/95 p-4 rounded-3xl shadow-xl border-4 border-[#4A86B4] text-center space-y-2">
               <div className="flex items-center justify-center gap-4">
-                <div className="w-16 h-16 bg-[#4A86B4] rounded-full flex items-center justify-center text-white"><User size={30} /></div>
+                <div className="w-12 h-12 bg-[#4A86B4] rounded-full flex items-center justify-center text-white"><User size={26} /></div>
                 <div className="text-left">
-                  <h2 className="text-xl font-black uppercase">{currentUser?.nom}</h2>
-                  <p className="font-black text-[#4A86B4]">{currentUser?.telephone}</p>
+                  <h2 className="text-lg font-black uppercase leading-none">{currentUser?.nom}</h2>
+                  <p className="text-md font-black text-[#4A86B4]">{currentUser?.telephone}</p>
                 </div>
               </div>
               {!confirmLogout ? (
-                <button onClick={() => setConfirmLogout(true)} className="w-full border-2 border-red-500 text-red-500 p-2 rounded-xl font-black uppercase">Se déconnecter</button>
+                <button onClick={() => setConfirmLogout(true)} className="w-full border-2 border-red-500 text-red-500 p-2 rounded-xl font-black uppercase text-[12px]">Se déconnecter</button>
               ) : (
-                <div className="flex gap-2 items-center justify-center"><p className="font-black text-red-600">SÛR ?</p><button onClick={() => {localStorage.removeItem('user_boisset'); setView('login'); setCurrentUser(null);}} className="bg-red-600 text-white px-4 py-2 rounded-lg font-black">OUI</button><button onClick={() => setConfirmLogout(false)} className="bg-gray-100 px-4 py-2 rounded-lg font-black">NON</button></div>
+                <div className="flex gap-2 items-center justify-center"><p className="font-black text-red-600 text-sm">SÛR ?</p><button onClick={() => {localStorage.removeItem('user_boisset'); setView('login'); setCurrentUser(null);}} className="bg-red-600 text-white px-4 py-2 rounded-lg font-black text-sm">OUI</button><button onClick={() => setConfirmLogout(false)} className="bg-gray-100 px-4 py-2 rounded-lg font-black text-sm">NON</button></div>
               )}
             </div>
-            <div className="bg-white p-3 rounded-2xl border-4 border-[#4A86B4] text-center">
-              <p className="text-md font-black text-[#4A86B4] uppercase">VERSION {VERSION}</p>
+
+            <div className="bg-white/90 p-4 rounded-3xl border-4 border-gray-400 space-y-2">
+              <h3 className="font-black text-black flex items-center gap-2 uppercase text-[13px]"><ShieldCheck size={20}/> Infos Sécurité</h3>
+              <p className="text-base font-black leading-tight text-black">Outil solidaire local. Aucune donnée revendue. Infos servant uniquement à la mise en relation.</p>
+            </div>
+
+            <div className="bg-white p-3 rounded-2xl border-4 border-[#4A86B4] text-center shadow-md">
+              <p className="text-md font-black text-[#4A86B4] uppercase leading-none">VERSION {VERSION}</p>
+              <p className="text-[12px] font-black text-[#4A86B4] uppercase mt-1">Gracieusement propulsé par Chris TAPOR</p>
             </div>
           </div>
         )}
       </main>
 
       {currentUser && (
-        <nav className="fixed bottom-0 w-full bg-white border-t-8 border-[#4A86B4] flex justify-around p-3 z-30">
+        <nav className="fixed bottom-0 w-full bg-white border-t-8 border-[#4A86B4] flex justify-around p-3 shadow-2xl z-30">
           <button onClick={() => setView('trajets')} className={`flex flex-col items-center font-black text-[11px] uppercase ${['trajets', 'liste', 'nouveau'].includes(view) ? 'text-[#4A86B4]' : 'text-gray-400'}`}><Car size={40} /> Accueil</button>
           <button onClick={() => setView('messages')} className={`flex flex-col items-center font-black text-[11px] uppercase ${view === 'messages' ? 'text-[#4A86B4]' : 'text-gray-400'}`}><MessageCircle size={40} /> Messages</button>
           <button onClick={() => setView('parametres')} className={`flex flex-col items-center font-black text-[11px] uppercase ${view === 'parametres' ? 'text-[#4A86B4]' : 'text-gray-400'}`}><ShieldCheck size={40} /> Paramètres</button>
