@@ -21,13 +21,32 @@ export default function App() {
   const [dateTrajet, setDateTrajet] = useState('');
   const [heureTrajet, setHeureTrajet] = useState('');
 
-  const VERSION = "1.48"; 
+  const VERSION = "1.50"; 
   const EMAIL_ADMIN = "christapor@gmail.com"; 
   const LISTE_ADMINS = ["0660419226", "0619872263"]; 
 
   const LISTE_NOIRE = ["merde", "putain", "connard", "salope"]; 
 
   const MAILTO_PIN = `mailto:${EMAIL_ADMIN}?subject=AlloBoisset%20:%20Code%20PIN%20oubli%C3%A9&body=Bonjour%20Chris,%0D%0A%0D%0AJ'ai%20oubli%C3%A9%20mon%20code%20PIN%20pour%20l'application%20AlloBoisset.%0D%0AMon%20num%C3%A9ro%20de%20t%C3%A9l%C3%A9phone%20est%20le%20:%20`;
+
+  // GESTION DU BOUTON RETOUR ET DE L'HISTORIQUE
+  useEffect(() => {
+    // On ajoute une étape dans l'historique quand on change de vue (sauf accueil)
+    if (view !== 'login' && view !== 'trajets') {
+      window.history.pushState({ view }, "");
+    }
+
+    const handleBackButton = (event) => {
+      // Si l'utilisateur fait "Retour" et qu'on n'est pas sur l'accueil, on y retourne
+      if (view !== 'trajets' && view !== 'login') {
+        event.preventDefault();
+        setView('trajets');
+      }
+    };
+
+    window.addEventListener('popstate', handleBackButton);
+    return () => window.removeEventListener('popstate', handleBackButton);
+  }, [view]);
 
   useEffect(() => {
     const savedUser = localStorage.getItem('user_boisset');
