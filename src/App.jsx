@@ -21,10 +21,12 @@ export default function App() {
   const [dateTrajet, setDateTrajet] = useState('');
   const [heureTrajet, setHeureTrajet] = useState('');
 
-  const messagesEndRef = useRef(null); // Pour le scroll automatique
+  const messagesEndRef = useRef(null);
 
-  const VERSION = "1.49"; 
+  const VERSION = "1.50"; 
   const EMAIL_ADMIN = "christapor@gmail.com"; 
+  
+  // LISTE DES MODÉRATEURS (CHRIS ET FLORIAN)
   const LISTE_ADMINS = ["0660419226", "0619872263"]; 
 
   const LISTE_NOIRE = ["merde", "putain", "connard", "salope"]; 
@@ -45,7 +47,7 @@ export default function App() {
     chargerMessages();
   }, []);
 
-  // Scroll automatique vers le bas quand les messages changent
+  // Gestion du défilement automatique vers le bas pour les messages
   useEffect(() => {
     if (view === 'messages') {
       messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -73,7 +75,7 @@ export default function App() {
       .from('village_messages')
       .select('*')
       .gt('created_at', dateLimite)
-      .order('created_at', { ascending: false }) // On prend les plus récents...
+      .order('created_at', { ascending: false })
       .limit(100);
     
     if (data) setMessages(data);
@@ -156,12 +158,9 @@ export default function App() {
     const dateObj = new Date(dateStr);
     const optionsDate = { day: 'numeric', month: 'long' };
     const datePart = dateObj.toLocaleDateString('fr-FR', optionsDate);
-    
     const h = String(dateObj.getHours()).padStart(2, '0');
     const m = String(dateObj.getMinutes()).padStart(2, '0');
-    const timePart = `${h}h${m}`;
-    
-    return `le ${datePart}, à ${timePart}`;
+    return `le ${datePart}, à ${h}h${m}`;
   };
 
   const estAdmin = (tel) => LISTE_ADMINS.includes(tel);
@@ -185,14 +184,27 @@ export default function App() {
         {view === 'login' && (
           <form onSubmit={handleLogin} className="bg-white/95 p-6 rounded-3xl shadow-xl mt-2 border-2 border-[#4A86B4] space-y-4 text-center">
             <h2 className="text-xl font-black uppercase italic">Identification</h2>
+            
+            <div className="bg-blue-50 p-3 rounded-2xl border-2 border-[#4A86B4]/30 flex items-start gap-2 text-left">
+              <Info size={24} className="text-[#4A86B4] shrink-0 mt-1" />
+              <p className="text-[11px] font-bold text-gray-700 leading-tight">
+                <span className="text-[#4A86B4] uppercase block mb-1">Première connexion ?</span>
+                Choisissez un code PIN de votre choix (4 chiffres). Il sera votre "clé" personnelle pour vos prochaines visites.
+              </p>
+            </div>
+
             <input type="text" placeholder="PRÉNOM" value={loginPrenom} onChange={(e)=>setLoginPrenom(e.target.value)} required className="w-full p-4 text-lg rounded-xl border-4 border-gray-100 font-bold select-text" />
+            
             <div className="space-y-1">
               <input type="text" placeholder="NOM (FACULTATIF)" value={loginNomFamille} onChange={(e)=>setLoginNomFamille(e.target.value)} className="w-full p-4 text-lg rounded-xl border-4 border-gray-100 font-bold bg-gray-50/50 select-text" />
               <p className="text-[10px] font-black text-black uppercase italic px-2 tracking-tight">Seule l'initiale suivie d'un point sera affichée</p>
             </div>
+
             <input type="tel" placeholder="TÉLÉPHONE" value={loginTel} onChange={(e)=>setLoginTel(e.target.value)} required className="w-full p-4 text-lg rounded-xl border-4 border-gray-100 font-bold select-text" />
             <input type="password" inputMode="numeric" maxLength="4" placeholder="CODE PIN (4 CHIFFRES)" value={loginPin} onChange={(e)=>setLoginPin(e.target.value.replace(/\D/g,''))} required className="w-full p-4 text-lg rounded-xl border-4 border-orange-200 font-bold text-center select-text" />
+            
             <button type="submit" className="w-full bg-[#4A86B4] text-white p-4 rounded-xl text-xl font-black uppercase shadow-lg">Entrer</button>
+            
             <div className="pt-2 border-t border-gray-100">
               <p className="text-sm font-black text-black uppercase">PIN oublié ?</p>
               <a href={MAILTO_PIN} className="text-sm font-black text-[#4A86B4] underline decoration-2 underline-offset-4">Cliquez ici pour m'envoyer un mail</a>
@@ -245,7 +257,6 @@ export default function App() {
             <button onClick={() => setView('trajets')} className="bg-white border-4 border-[#4A86B4] text-[#4A86B4] px-4 py-2 rounded-xl font-black flex items-center gap-2 mb-2 w-fit shadow-md"><ArrowLeft size={20} /> RETOUR</button>
             <div className="flex-1 bg-white/90 backdrop-blur-sm rounded-3xl p-4 overflow-y-auto space-y-3 shadow-inner border-2 border-white/50">
               <h2 className="text-center font-black uppercase text-gray-400 text-[10px] mb-2 tracking-widest italic">Le Mur du Village</h2>
-              {/* On inverse l'ordre ici : .slice().reverse() pour mettre les nouveaux en bas */}
               {messages.slice().reverse().map(m => (
                 <div key={m.id} className={`relative max-w-[85%] p-3 rounded-2xl shadow-sm ${m.sender_name === currentUser?.nom ? 'bg-blue-50 ml-auto border-r-4 border-[#4A86B4]' : 'bg-gray-50 border-l-4 border-gray-300'}`}>
                   <div className="flex justify-between items-start mb-1 gap-4">
@@ -260,7 +271,7 @@ export default function App() {
                   <p className="text-sm font-bold leading-tight break-words whitespace-pre-wrap select-text">{m.text}</p>
                 </div>
               ))}
-              <div ref={messagesEndRef} /> {/* Point de repère pour le scroll automatique */}
+              <div ref={messagesEndRef} />
             </div>
             <form onSubmit={envoyerMessage} className="mt-3 flex items-end gap-2 bg-white p-2 rounded-2xl shadow-lg border-2 border-[#4A86B4]">
               <textarea value={nouveauMessage} onChange={(e)=>setNouveauMessage(e.target.value)} placeholder="Écrire au village..." rows="2" className="flex-1 p-2 bg-transparent font-bold text-sm resize-none focus:outline-none select-text" />
