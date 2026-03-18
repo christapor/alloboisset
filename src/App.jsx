@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from './lib/supabaseClient';
 import { Car, User, MessageCircle, Plus, ArrowLeft, Trash2, Phone, ShieldCheck, Users, Edit, HelpCircle, Share2, Send, Info } from 'lucide-react';
 
@@ -21,32 +21,15 @@ export default function App() {
   const [dateTrajet, setDateTrajet] = useState('');
   const [heureTrajet, setHeureTrajet] = useState('');
 
-  const VERSION = "1.50"; 
+  const messagesEndRef = useRef(null); // Pour le scroll automatique
+
+  const VERSION = "1.49"; 
   const EMAIL_ADMIN = "christapor@gmail.com"; 
   const LISTE_ADMINS = ["0660419226", "0619872263"]; 
 
   const LISTE_NOIRE = ["merde", "putain", "connard", "salope"]; 
 
   const MAILTO_PIN = `mailto:${EMAIL_ADMIN}?subject=AlloBoisset%20:%20Code%20PIN%20oubli%C3%A9&body=Bonjour%20Chris,%0D%0A%0D%0AJ'ai%20oubli%C3%A9%20mon%20code%20PIN%20pour%20l'application%20AlloBoisset.%0D%0AMon%20num%C3%A9ro%20de%20t%C3%A9l%C3%A9phone%20est%20le%20:%20`;
-
-  // GESTION DU BOUTON RETOUR ET DE L'HISTORIQUE
-  useEffect(() => {
-    // On ajoute une étape dans l'historique quand on change de vue (sauf accueil)
-    if (view !== 'login' && view !== 'trajets') {
-      window.history.pushState({ view }, "");
-    }
-
-    const handleBackButton = (event) => {
-      // Si l'utilisateur fait "Retour" et qu'on n'est pas sur l'accueil, on y retourne
-      if (view !== 'trajets' && view !== 'login') {
-        event.preventDefault();
-        setView('trajets');
-      }
-    };
-
-    window.addEventListener('popstate', handleBackButton);
-    return () => window.removeEventListener('popstate', handleBackButton);
-  }, [view]);
 
   useEffect(() => {
     const savedUser = localStorage.getItem('user_boisset');
@@ -61,6 +44,13 @@ export default function App() {
     chargerTrajets();
     chargerMessages();
   }, []);
+
+  // Scroll automatique vers le bas quand les messages changent
+  useEffect(() => {
+    if (view === 'messages') {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [messages, view]);
 
   const chargerTrajets = async () => {
     const { data } = await supabase.from('rides').select('*').order('id', { ascending: false });
@@ -83,7 +73,7 @@ export default function App() {
       .from('village_messages')
       .select('*')
       .gt('created_at', dateLimite)
-      .order('created_at', { ascending: false })
+      .order('created_at', { ascending: false }) // On prend les plus récents...
       .limit(100);
     
     if (data) setMessages(data);
@@ -255,7 +245,8 @@ export default function App() {
             <button onClick={() => setView('trajets')} className="bg-white border-4 border-[#4A86B4] text-[#4A86B4] px-4 py-2 rounded-xl font-black flex items-center gap-2 mb-2 w-fit shadow-md"><ArrowLeft size={20} /> RETOUR</button>
             <div className="flex-1 bg-white/90 backdrop-blur-sm rounded-3xl p-4 overflow-y-auto space-y-3 shadow-inner border-2 border-white/50">
               <h2 className="text-center font-black uppercase text-gray-400 text-[10px] mb-2 tracking-widest italic">Le Mur du Village</h2>
-              {messages.map(m => (
+              {/* On inverse l'ordre ici : .slice().reverse() pour mettre les nouveaux en bas */}
+              {messages.slice().reverse().map(m => (
                 <div key={m.id} className={`relative max-w-[85%] p-3 rounded-2xl shadow-sm ${m.sender_name === currentUser?.nom ? 'bg-blue-50 ml-auto border-r-4 border-[#4A86B4]' : 'bg-gray-50 border-l-4 border-gray-300'}`}>
                   <div className="flex justify-between items-start mb-1 gap-4">
                     <div className="flex flex-col leading-tight">
@@ -269,10 +260,11 @@ export default function App() {
                   <p className="text-sm font-bold leading-tight break-words whitespace-pre-wrap select-text">{m.text}</p>
                 </div>
               ))}
+              <div ref={messagesEndRef} /> {/* Point de repère pour le scroll automatique */}
             </div>
             <form onSubmit={envoyerMessage} className="mt-3 flex items-end gap-2 bg-white p-2 rounded-2xl shadow-lg border-2 border-[#4A86B4]">
               <textarea value={nouveauMessage} onChange={(e)=>setNouveauMessage(e.target.value)} placeholder="Écrire au village..." rows="2" className="flex-1 p-2 bg-transparent font-bold text-sm resize-none focus:outline-none select-text" />
-              <button type="submit" className="bg-[#4A86B4] text-white p-3 rounded-xl shadow-md active:scale-95"><Send size={20}/></button>
+              <button type="submit" className="bg-[#4A86B4] text-white p-3 rounded-xl shadow-md active:scale-95 transition-transform"><Send size={20}/></button>
             </form>
           </div>
         )}
