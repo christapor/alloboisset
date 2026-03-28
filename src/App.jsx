@@ -175,7 +175,8 @@ export default function App() {
       
       <header className="bg-white/90 shadow-xl p-3 sticky top-0 z-20 border-b-8 border-[#4A86B4] flex flex-col items-center backdrop-blur-sm">
         <div className="flex items-center gap-5 w-full justify-between px-4">
-          <img src="/alloboisset_logo.jpg" className="h-10 w-10 object-contain" alt="Logo" />
+          {/* On change le .jpg par le nouveau .png de Florian */}
+<img src="/blason.png" className="h-10 w-10 object-contain" alt="Logo" />
           <div className="flex flex-col text-center">
             <h1 className="text-xl font-black text-[#4A86B4] uppercase leading-none tracking-tighter">AlloBoisset</h1>
             <p className="text-[9px] font-black text-[#5B8C4E] uppercase tracking-[0.2em] mt-1 border-t-2 border-[#5B8C4E] pt-1">Covoiturage Villageois</p>
