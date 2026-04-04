@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from './lib/supabaseClient';
-import { Car, User, MessageCircle, Plus, ArrowLeft, Trash2, Phone, ShieldCheck, Users, Edit, HelpCircle, Share2, Send, Info, FileText } from 'lucide-react';
+import { Car, User, MessageCircle, Plus, ArrowLeft, Trash2, Phone, ShieldCheck, Users, Edit, HelpCircle, Share2, Send, Info, FileText, CheckCircle2 } from 'lucide-react';
 
 export default function App() {
   const [currentUser, setCurrentUser] = useState(null);
@@ -9,6 +9,7 @@ export default function App() {
   const [loginNomFamille, setLoginNomFamille] = useState('');
   const [loginTel, setLoginTel] = useState(localStorage.getItem('last_tel') || '');
   const [loginPin, setLoginPin] = useState('');
+  const [acceptCGU, setAcceptCGU] = useState(false); // État pour la validation des conditions
   const [trajets, setTrajets] = useState([]);
   const [messages, setMessages] = useState([]);
   const [nouveauMessage, setNouveauMessage] = useState('');
@@ -23,14 +24,13 @@ export default function App() {
 
   const messagesEndRef = useRef(null);
 
-  const VERSION = "1.52"; // Mise à jour avec les CGU
+  const VERSION = "1.60"; // MAJ : Sécurité Juridique à l'inscription
   const EMAIL_ADMIN = "christapor@gmail.com"; 
   const LISTE_ADMINS = ["0660419226", "0619872263"]; 
   const LISTE_NOIRE = ["merde", "putain", "connard", "salope"]; 
 
   const MAILTO_PIN = `mailto:${EMAIL_ADMIN}?subject=AlloBoisset%20:%20Code%20PIN%20oubli%C3%A9&body=Bonjour%20Chris,%0D%0A%0D%0AJ'ai%20oubli%C3%A9%20mon%20code%20PIN%20pour%20l'application%20AlloBoisset.%0D%0AMon%20num%C3%A9ro%20de%20t%C3%A9l%C3%A9phone%20est%20le%20:%20`;
 
-  // --- LOGIQUE DE NAVIGATION ---
   const nav = (newView) => {
     if (newView !== view) {
       window.history.pushState({ view: newView }, '', '');
@@ -47,9 +47,7 @@ export default function App() {
         setView(savedUser ? 'trajets' : 'login');
       }
     };
-
     window.addEventListener('popstate', handlePopState);
-    
     const savedUser = localStorage.getItem('user_boisset');
     if (savedUser) { 
       try {
@@ -61,10 +59,8 @@ export default function App() {
         localStorage.removeItem('user_boisset');
       }
     }
-
     chargerTrajets();
     chargerMessages();
-
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
@@ -125,7 +121,9 @@ export default function App() {
 
   const handleLogin = async (e) => {
     if (e) e.preventDefault();
+    if (!acceptCGU) return alert("Veuillez valider les conditions d'utilisation pour entrer.");
     if (!loginPrenom.trim() || !loginTel.trim() || loginPin.length !== 4) return alert("Prénom, Téléphone et PIN requis.");
+    
     const { data: profile } = await supabase.from('profiles').select('*').eq('phone', loginTel).maybeSingle();
     if (profile && profile.pin !== loginPin) return alert(`Code PIN incorrect !`);
     else if (!profile) await supabase.from('profiles').insert([{ phone: loginTel, pin: loginPin, name: loginPrenom.trim() }]);
@@ -184,15 +182,31 @@ export default function App() {
         {view === 'login' && (
           <form onSubmit={handleLogin} className="bg-white/95 p-6 rounded-3xl shadow-xl mt-2 border-2 border-[#4A86B4] space-y-4 text-center">
             <h2 className="text-xl font-black uppercase italic">Identification</h2>
+            
             <div className="bg-blue-50 p-3 rounded-2xl border-2 border-[#4A86B4]/30 flex items-start gap-2 text-left">
               <Info size={24} className="text-[#4A86B4] shrink-0 mt-1" />
               <p className="text-[11px] font-bold text-gray-700 leading-tight"><span className="text-[#4A86B4] uppercase block mb-1">Première connexion ?</span>Choisissez un code PIN de votre choix (4 chiffres).</p>
             </div>
+
             <input type="text" placeholder="PRÉNOM" value={loginPrenom} onChange={(e)=>setLoginPrenom(e.target.value)} required className="w-full p-4 text-lg rounded-xl border-4 border-gray-100 font-bold" />
             <input type="text" placeholder="NOM (FACULTATIF)" value={loginNomFamille} onChange={(e)=>setLoginNomFamille(e.target.value)} className="w-full p-4 text-lg rounded-xl border-4 border-gray-100 font-bold bg-gray-50/50" />
             <input type="tel" placeholder="TÉLÉPHONE" value={loginTel} onChange={(e)=>setLoginTel(e.target.value)} required className="w-full p-4 text-lg rounded-xl border-4 border-gray-100 font-bold" />
             <input type="password" inputMode="numeric" maxLength="4" placeholder="CODE PIN" value={loginPin} onChange={(e)=>setLoginPin(e.target.value.replace(/\D/g,''))} required className="w-full p-4 text-lg rounded-xl border-4 border-orange-200 font-bold text-center" />
-            <button type="submit" className="w-full bg-[#4A86B4] text-white p-4 rounded-xl text-xl font-black uppercase shadow-lg">Entrer</button>
+
+            {/* BLOC ENGAGEMENT JURIDIQUE */}
+            <div className={`p-4 rounded-2xl border-2 transition-all text-left space-y-3 ${acceptCGU ? 'bg-green-50 border-green-500' : 'bg-orange-50 border-orange-300'}`}>
+              <div className="text-[10px] font-bold text-gray-700 leading-tight space-y-2">
+                <p>🚗 <span className="text-[#4A86B4]">CONDUCTEURS :</span> Je certifie être assuré(e), être en possession d'un permis de conduire valable et à jour, et je reconnais que l'application AlloBoisset décline toute responsabilité en cas d'incident, le trajet relevant de l'entraide privée.</p>
+                <p>🙋 <span className="text-[#8E44AD]">PASSAGERS :</span> Je reconnais voyager à titre strictement gracieux. Je décharge AlloBoisset et ses partenaires de toute responsabilité liée au transport et m'engage à respecter les règles de courtoisie envers le conducteur.</p>
+              </div>
+              <label className="flex items-center gap-3 cursor-pointer select-none pt-1">
+                <input type="checkbox" checked={acceptCGU} onChange={(e)=>setAcceptCGU(e.target.checked)} className="w-6 h-6 rounded border-2 border-orange-400" />
+                <span className="text-[11px] font-black uppercase text-gray-800">J'accepte ces conditions</span>
+              </label>
+            </div>
+
+            <button type="submit" className={`w-full p-4 rounded-xl text-xl font-black uppercase shadow-lg transition-all ${acceptCGU ? 'bg-[#4A86B4] text-white' : 'bg-gray-300 text-gray-500 cursor-not-allowed'}`}>Entrer</button>
+            
             <div className="pt-2 border-t border-gray-100">
               <a href={MAILTO_PIN} className="text-sm font-black text-[#4A86B4] underline decoration-2 underline-offset-4">PIN oublié ? Cliquez ici</a>
             </div>
@@ -318,17 +332,14 @@ export default function App() {
                 <div className="w-12 h-12 bg-[#4A86B4] rounded-full flex items-center justify-center text-white"><User size={26} /></div>
                 <div className="text-left font-black"><h2 className="text-lg uppercase leading-none">{currentUser?.nom}</h2><p className="text-md text-[#4A86B4]">{currentUser?.telephone}</p></div>
               </div>
-              
               <button onClick={() => nav('aide')} className="w-full bg-[#4A86B4] text-white p-3 rounded-xl font-black uppercase flex items-center justify-center gap-2 shadow-md"><Info size={20}/> Mode d'emploi</button>
-              
-              {/* NOUVEAU MENU CGU */}
               <button onClick={() => nav('cgu')} className="w-full bg-gray-100 text-gray-700 p-3 rounded-xl font-black uppercase flex items-center justify-center gap-2 shadow-sm border-2 border-gray-200"><FileText size={20}/> Conditions Générales</button>
               
               {!confirmLogout ? (<button onClick={() => setConfirmLogout(true)} className="w-full border-2 border-red-500 text-red-500 p-2 rounded-xl font-black uppercase text-[12px]">Se déconnecter</button>) : (
                 <div className="flex flex-col gap-2 p-2 bg-red-50 rounded-xl border-2 border-red-200">
                   <p className="font-black text-red-600 text-sm italic leading-tight">Voulez-vous vraiment vous déconnecter ?</p>
                   <div className="flex gap-2 justify-center">
-                    <button onClick={() => {localStorage.removeItem('user_boisset'); nav('login'); setCurrentUser(null); setConfirmLogout(false);}} className="bg-red-600 text-white px-6 py-2 rounded-lg font-black text-sm">OUI</button>
+                    <button onClick={() => {localStorage.removeItem('user_boisset'); nav('login'); setCurrentUser(null); setConfirmLogout(false); setAcceptCGU(false);}} className="bg-red-600 text-white px-6 py-2 rounded-lg font-black text-sm">OUI</button>
                     <button onClick={() => setConfirmLogout(false)} className="bg-gray-200 text-gray-700 px-6 py-2 rounded-lg font-black text-sm">NON</button>
                   </div>
                 </div>
