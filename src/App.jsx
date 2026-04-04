@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from './lib/supabaseClient';
-import { Car, User, MessageCircle, Plus, ArrowLeft, Trash2, Phone, ShieldCheck, Users, Edit, HelpCircle, Share2, Send, Info } from 'lucide-react';
+import { Car, User, MessageCircle, Plus, ArrowLeft, Trash2, Phone, ShieldCheck, Users, Edit, HelpCircle, Share2, Send, Info, FileText } from 'lucide-react';
 
 export default function App() {
   const [currentUser, setCurrentUser] = useState(null);
@@ -23,7 +23,7 @@ export default function App() {
 
   const messagesEndRef = useRef(null);
 
-  const VERSION = "1.51"; // On incrémente pour la forme !
+  const VERSION = "1.52"; // Mise à jour avec les CGU
   const EMAIL_ADMIN = "christapor@gmail.com"; 
   const LISTE_ADMINS = ["0660419226", "0619872263"]; 
   const LISTE_NOIRE = ["merde", "putain", "connard", "salope"]; 
@@ -43,7 +43,6 @@ export default function App() {
       if (event.state && event.state.view) {
         setView(event.state.view);
       } else {
-        // Si on revient tout au début, on remet la vue principale ou login
         const savedUser = localStorage.getItem('user_boisset');
         setView(savedUser ? 'trajets' : 'login');
       }
@@ -51,14 +50,12 @@ export default function App() {
 
     window.addEventListener('popstate', handlePopState);
     
-    // Initialisation
     const savedUser = localStorage.getItem('user_boisset');
     if (savedUser) { 
       try {
         const user = JSON.parse(savedUser);
         setCurrentUser(user); 
         setView('trajets'); 
-        // On pousse l'état initial pour que le premier "retour" ne ferme pas l'appli direct
         window.history.replaceState({ view: 'trajets' }, '', '');
       } catch (e) {
         localStorage.removeItem('user_boisset');
@@ -70,7 +67,6 @@ export default function App() {
 
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
-  // -----------------------------
 
   useEffect(() => {
     if (view === 'messages') {
@@ -175,8 +171,7 @@ export default function App() {
       
       <header className="bg-white/90 shadow-xl p-3 sticky top-0 z-20 border-b-8 border-[#4A86B4] flex flex-col items-center backdrop-blur-sm">
         <div className="flex items-center gap-5 w-full justify-between px-4">
-          {/* On change le .jpg par le nouveau .png de Florian */}
-<img src="/blason.png" className="h-10 w-10 object-contain" alt="Logo" />
+          <img src="/blason.png" className="h-10 w-10 object-contain" alt="Logo" />
           <div className="flex flex-col text-center">
             <h1 className="text-xl font-black text-[#4A86B4] uppercase leading-none tracking-tighter">AlloBoisset</h1>
             <p className="text-[9px] font-black text-[#5B8C4E] uppercase tracking-[0.2em] mt-1 border-t-2 border-[#5B8C4E] pt-1">Covoiturage Villageois</p>
@@ -223,11 +218,27 @@ export default function App() {
             <button onClick={() => nav('parametres')} className="bg-white border-4 border-[#4A86B4] text-[#4A86B4] px-4 py-2 rounded-xl font-black flex items-center gap-2 mb-2 w-fit shadow-md"><ArrowLeft size={20} /> RETOUR</button>
             <div className="bg-white/95 p-6 rounded-3xl shadow-xl space-y-6">
               <h2 className="text-xl font-black uppercase text-[#4A86B4] border-b-4 border-[#4A86B4] pb-2 text-center italic">Guide AlloBoisset</h2>
-              <section className="space-y-2">
-                <h3 className="font-black text-[#4A86B4] uppercase flex items-center gap-2"><Car size={20}/> Covoiturer</h3>
-                <p className="text-sm font-bold text-gray-700 leading-tight">Proposez ou cherchez un trajet facilement.</p>
+              <section className="space-y-2 text-sm font-bold text-gray-700 leading-tight">
+                <h3 className="font-black text-[#4A86B4] uppercase flex items-center gap-2 text-base"><Car size={20}/> Covoiturer</h3>
+                <p>Proposez ou cherchez un trajet facilement.</p>
+                <p className="mt-2 text-xs italic">AlloBoisset facilite la mise en relation entre villageois pour des trajets du quotidien.</p>
               </section>
-              {/* Reste du contenu aide... */}
+            </div>
+          </div>
+        )}
+
+        {view === 'cgu' && (
+          <div className="space-y-4">
+            <button onClick={() => nav('parametres')} className="bg-white border-4 border-[#4A86B4] text-[#4A86B4] px-4 py-2 rounded-xl font-black flex items-center gap-2 mb-2 w-fit shadow-md"><ArrowLeft size={20} /> RETOUR</button>
+            <div className="bg-white/95 p-6 rounded-3xl shadow-xl space-y-4 text-gray-800">
+              <h2 className="text-xl font-black uppercase text-[#4A86B4] border-b-4 border-[#4A86B4] pb-2 text-center italic">Conditions Générales</h2>
+              <div className="text-[11px] font-bold leading-tight space-y-3 overflow-y-auto max-h-[60vh] pr-2">
+                <p><strong>1. SERVICE :</strong> AlloBoisset est un outil technique de mise en relation citoyenne pour le village de Boisset. Le service est strictement bénévole.</p>
+                <p><strong>2. GRATUITÉ :</strong> Le partage de frais est interdit. Aucun échange d'argent ne doit avoir lieu. C'est un service d'entraide pure.</p>
+                <p><strong>3. ASSURANCES :</strong> Le conducteur certifie être assuré. Les passagers sont couverts par la Responsabilité Civile (RC) obligatoire du conducteur (Loi Badinter).</p>
+                <p><strong>4. RESPONSABILITÉ :</strong> Le concepteur et la Mairie déclinent toute responsabilité en cas d'accident, litige ou dommage. L'utilisation se fait sous votre entière responsabilité.</p>
+                <p><strong>5. DONNÉES :</strong> Vos infos servent uniquement à la mise en relation et ne sont jamais vendues.</p>
+              </div>
             </div>
           </div>
         )}
@@ -307,7 +318,12 @@ export default function App() {
                 <div className="w-12 h-12 bg-[#4A86B4] rounded-full flex items-center justify-center text-white"><User size={26} /></div>
                 <div className="text-left font-black"><h2 className="text-lg uppercase leading-none">{currentUser?.nom}</h2><p className="text-md text-[#4A86B4]">{currentUser?.telephone}</p></div>
               </div>
+              
               <button onClick={() => nav('aide')} className="w-full bg-[#4A86B4] text-white p-3 rounded-xl font-black uppercase flex items-center justify-center gap-2 shadow-md"><Info size={20}/> Mode d'emploi</button>
+              
+              {/* NOUVEAU MENU CGU */}
+              <button onClick={() => nav('cgu')} className="w-full bg-gray-100 text-gray-700 p-3 rounded-xl font-black uppercase flex items-center justify-center gap-2 shadow-sm border-2 border-gray-200"><FileText size={20}/> Conditions Générales</button>
+              
               {!confirmLogout ? (<button onClick={() => setConfirmLogout(true)} className="w-full border-2 border-red-500 text-red-500 p-2 rounded-xl font-black uppercase text-[12px]">Se déconnecter</button>) : (
                 <div className="flex flex-col gap-2 p-2 bg-red-50 rounded-xl border-2 border-red-200">
                   <p className="font-black text-red-600 text-sm italic leading-tight">Voulez-vous vraiment vous déconnecter ?</p>
@@ -330,7 +346,7 @@ export default function App() {
         <nav className="fixed bottom-0 w-full bg-white/90 backdrop-blur-md border-t-8 border-[#4A86B4] flex justify-around p-2 shadow-2xl z-30">
           <button onClick={() => {nav('trajets'); setConfirmLogout(false);}} className={`flex flex-col items-center font-black text-[10px] uppercase ${['trajets', 'liste_offres', 'liste_demandes', 'nouveau'].includes(view) ? 'text-[#4A86B4]' : 'text-gray-400'}`}><Car size={32} /> Accueil</button>
           <button onClick={() => {nav('messages'); setConfirmLogout(false); chargerMessages();}} className={`flex flex-col items-center font-black text-[10px] uppercase ${view === 'messages' ? 'text-[#4A86B4]' : 'text-gray-400'}`}><MessageCircle size={32} /> Messages</button>
-          <button onClick={() => {nav('parametres'); setConfirmLogout(false);}} className={`flex flex-col items-center font-black text-[10px] uppercase ${view === 'parametres' || view === 'aide' ? 'text-[#4A86B4]' : 'text-gray-400'}`}><ShieldCheck size={32} /> Paramètres</button>
+          <button onClick={() => {nav('parametres'); setConfirmLogout(false);}} className={`flex flex-col items-center font-black text-[10px] uppercase ${['parametres', 'aide', 'cgu'].includes(view) ? 'text-[#4A86B4]' : 'text-gray-400'}`}><ShieldCheck size={32} /> Paramètres</button>
         </nav>
       )}
     </div>
