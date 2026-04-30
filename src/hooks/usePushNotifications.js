@@ -49,9 +49,28 @@ const getNotificationHelpText = () => {
   return [
     'Les notifications semblent bloquées dans ce navigateur.',
     '',
-    'Ouvrez les paramètres du navigateur, cherchez les autorisations du site AlloBoisset, puis activez les notifications.',
-    'Fermez ensuite complètement AlloBoisset, rouvrez l\'application, puis réessayez.'
+    'Pour les réactiver sur ordinateur :',
+    '1. Cliquez sur le cadenas à gauche de l\'adresse du site.',
+    '2. Ouvrez "Paramètres du site".',
+    '3. Cherchez "Notifications".',
+    '4. Choisissez "Autoriser".',
+    '5. Fermez complètement AlloBoisset, puis rouvrez l\'application.',
+    '6. Revenez ici et appuyez de nouveau sur "Activer les alertes".'
   ].join('\n');
+};
+
+const getNoChoiceHelpText = () => {
+  const system = detectMobileSystem();
+
+  if (system === 'android') {
+    return 'Aucun choix n\'a été fait. Pour recevoir les alertes AlloBoisset, appuyez sur "Autoriser" lorsque le téléphone le propose.';
+  }
+
+  if (system === 'ios') {
+    return 'Aucun choix n\'a été fait. Pour recevoir les alertes AlloBoisset, appuyez sur "Autoriser" lorsque l\'iPhone le propose.';
+  }
+
+  return 'Aucun choix n\'a été fait. Pour recevoir les alertes AlloBoisset, cliquez sur "Autoriser" lorsque le navigateur le propose. Si aucune demande ne s\'affiche, cliquez sur le cadenas à gauche de l\'adresse du site, puis autorisez les notifications.';
 };
 
 export const usePushNotifications = () => {
@@ -91,7 +110,7 @@ export const usePushNotifications = () => {
         : await Notification.requestPermission();
 
       if (permission === 'default') {
-        alert('Aucun choix n\'a été fait. Pour recevoir les alertes AlloBoisset, appuyez sur "Autoriser" lorsque le téléphone le propose.');
+        alert(getNoChoiceHelpText());
         return;
       }
 
