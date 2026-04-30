@@ -27,7 +27,8 @@ const getNotificationHelpText = () => {
       '2. Appuyez sur "Infos sur l\'application" ou le petit i.',
       '3. Ouvrez "Notifications".',
       '4. Activez "Autoriser les notifications".',
-      '5. Revenez dans AlloBoisset et réessayez.'
+      '5. Fermez complètement AlloBoisset, puis rouvrez l\'application.',
+      '6. Revenez ici et appuyez de nouveau sur "Activer les alertes".'
     ].join('\n');
   }
 
@@ -40,14 +41,16 @@ const getNotificationHelpText = () => {
       '2. Allez dans "Notifications".',
       '3. Choisissez "AlloBoisset".',
       '4. Activez "Autoriser les notifications".',
-      '5. Revenez dans AlloBoisset et réessayez.'
+      '5. Fermez complètement AlloBoisset, puis rouvrez l\'application.',
+      '6. Revenez ici et appuyez de nouveau sur "Activer les alertes".'
     ].join('\n');
   }
 
   return [
     'Les notifications semblent bloquées dans ce navigateur.',
     '',
-    'Ouvrez les paramètres du navigateur, cherchez les autorisations du site AlloBoisset, puis activez les notifications.'
+    'Ouvrez les paramètres du navigateur, cherchez les autorisations du site AlloBoisset, puis activez les notifications.',
+    'Fermez ensuite complètement AlloBoisset, rouvrez l\'application, puis réessayez.'
   ].join('\n');
 };
 
