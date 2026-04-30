@@ -1,8 +1,55 @@
 import { useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
 
-// Ta clé publique générée tout à l'heure
+// Clé publique VAPID utilisée pour l'abonnement Web Push
 const PUBLIC_VAPID_KEY = 'BKK4uBgAWRVhznoTxx7vsXt_1fD2uNB3_T1O9gheERAkXTZo-ak5EahDOuyvjfZvyi9aGkmNHDHcem75lEzpIyY';
+
+const detectMobileSystem = () => {
+  const userAgent = window.navigator.userAgent || '';
+  const platform = window.navigator.platform || '';
+  const isIOS = /iPad|iPhone|iPod/.test(userAgent) || (platform === 'MacIntel' && window.navigator.maxTouchPoints > 1);
+  const isAndroid = /Android/i.test(userAgent);
+
+  if (isIOS) return 'ios';
+  if (isAndroid) return 'android';
+  return 'other';
+};
+
+const getNotificationHelpText = () => {
+  const system = detectMobileSystem();
+
+  if (system === 'android') {
+    return [
+      'Les notifications semblent bloquées sur ce téléphone.',
+      '',
+      'Pour les réactiver :',
+      '1. Appuyez longtemps sur l\'icône AlloBoisset.',
+      '2. Appuyez sur "Infos sur l\'application" ou le petit i.',
+      '3. Ouvrez "Notifications".',
+      '4. Activez "Autoriser les notifications".',
+      '5. Revenez dans AlloBoisset et réessayez.'
+    ].join('\n');
+  }
+
+  if (system === 'ios') {
+    return [
+      'Les notifications semblent bloquées sur cet iPhone.',
+      '',
+      'Pour les réactiver :',
+      '1. Ouvrez l\'application Réglages.',
+      '2. Allez dans "Notifications".',
+      '3. Choisissez "AlloBoisset".',
+      '4. Activez "Autoriser les notifications".',
+      '5. Revenez dans AlloBoisset et réessayez.'
+    ].join('\n');
+  }
+
+  return [
+    'Les notifications semblent bloquées dans ce navigateur.',
+    '',
+    'Ouvrez les paramètres du navigateur, cherchez les autorisations du site AlloBoisset, puis activez les notifications.'
+  ].join('\n');
+};
 
 export const usePushNotifications = () => {
   const [isSubscribed, setIsSubscribed] = useState(false);
@@ -21,39 +68,55 @@ export const usePushNotifications = () => {
 
   const subscribeToPush = async () => {
     setLoading(true);
+
     try {
-      // 1. On vérifie que les notifications sont supportées
+      if (!('Notification' in window)) {
+        throw new Error('Notifications non supportées par ce navigateur');
+      }
+
       if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
         throw new Error('Notifications non supportées par ce navigateur');
       }
 
-      // 2. On demande la permission (c'est là que la fenêtre Android doit apparaître)
-      const permission = await Notification.requestPermission();
-      if (permission !== 'granted') {
-        throw new Error('Permission refusée par l\'utilisateur');
+      if (Notification.permission === 'denied') {
+        alert(getNotificationHelpText());
+        return;
       }
 
-      // 3. On enregistre explicitement le Service Worker
+      const permission = Notification.permission === 'granted'
+        ? 'granted'
+        : await Notification.requestPermission();
+
+      if (permission === 'default') {
+        alert('Aucun choix n\'a été fait. Pour recevoir les alertes AlloBoisset, appuyez sur "Autoriser" lorsque le téléphone le propose.');
+        return;
+      }
+
+      if (permission !== 'granted') {
+        alert(getNotificationHelpText());
+        return;
+      }
+
       let registration = await navigator.serviceWorker.getRegistration();
       if (!registration) {
         registration = await navigator.serviceWorker.register('/sw.js');
       }
       await navigator.serviceWorker.ready;
 
-      // 4. On s'abonne avec ta clé VAPID
-      const subscription = await registration.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(PUBLIC_VAPID_KEY)
-      });
+      let subscription = await registration.pushManager.getSubscription();
+      if (!subscription) {
+        subscription = await registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(PUBLIC_VAPID_KEY)
+        });
+      }
 
-      // 5. CORRECTION : On utilise TON système de connexion (le téléphone)
       const savedUser = localStorage.getItem('user_boisset');
       if (!savedUser) throw new Error('Utilisateur non connecté sur AlloBoisset');
       
       const user = JSON.parse(savedUser);
-      const userId = user.telephone; // On utilise le 06... comme identifiant
+      const userId = user.telephone;
 
-      // 6. On sauvegarde dans Supabase
       const { error } = await supabase
         .from('push_subscriptions')
         .upsert({ 
