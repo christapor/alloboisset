@@ -275,7 +275,7 @@ export default function App() {
                   </h3>
                   <p className="text-[11px] font-bold text-gray-700 leading-tight">
                     Activez les alertes dans vos <strong>Paramètres</strong> pour ne rien rater. 
-                    Si cela ne fonctionne pas, suivez le guide qui s'affichera pour débloquer votre téléphone.
+                    Si cela ne fonctionne pas, suivez le guide qui s'affichera pour débloquer votre téléphone, en cliquant sur "Activez les Alertes".
                   </p>
                 </section>
 
