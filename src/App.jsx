@@ -397,10 +397,30 @@ export default function App() {
                 <p className="text-[9px] font-bold text-orange-600 italic leading-none">Recommandé pour recevoir les alertes en direct</p>
               </div>
 
-              <div className="flex items-center justify-center gap-4 pt-2">
-                <div className="w-12 h-12 bg-[#4A86B4] rounded-full flex items-center justify-center text-white"><User size={26} /></div>
-                <div className="text-left font-black"><h2 className="text-lg uppercase leading-none">{currentUser?.nom}</h2><p className="text-md text-[#4A86B4]">{currentUser?.telephone}</p></div>
+              <div className="flex flex-col items-center gap-3 pt-2">
+                <div className="flex items-center justify-center gap-4">
+                  <div className="w-12 h-12 bg-[#4A86B4] rounded-full flex items-center justify-center text-white shadow-md">
+                    <User size={26} />
+                  </div>
+                  <div className="text-left font-black">
+                    <h2 className="text-lg uppercase leading-none">{currentUser?.nom}</h2>
+                    <a href={`tel:${currentUser?.telephone}`} className="text-md text-[#4A86B4] block hover:underline">
+                      {currentUser?.telephone}
+                    </a>
+                  </div>
+                </div>
+
+                {/* Bloc Assistance Directe */}
+                <div className="text-center space-y-0.5 bg-gray-50 p-2 rounded-xl border border-gray-100 w-full">
+                  <p className="text-[10px] font-black uppercase text-gray-500 tracking-tighter">
+                    Besoin d'aide ? Mot de passe oublié ?
+                  </p>
+                  <p className="text-[11px] font-black text-gray-700">
+                    Appelez au <a href="tel:0660419226" className="text-[#4A86B4] underline decoration-2 underline-offset-2">06 60 41 92 26</a>
+                  </p>
+                </div>
               </div>
+
               <button onClick={() => nav('aide')} className="w-full bg-[#4A86B4] text-white p-3 rounded-xl font-black uppercase flex items-center justify-center gap-2 shadow-md"><Info size={20}/> Mode d'emploi</button>
               <button onClick={() => nav('cgu')} className="w-full bg-gray-100 text-gray-700 p-3 rounded-xl font-black uppercase flex items-center justify-center gap-2 shadow-sm border-2 border-gray-200"><FileText size={20}/> Conditions Générales</button>
               
