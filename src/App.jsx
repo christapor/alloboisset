@@ -413,7 +413,7 @@ export default function App() {
                 {/* Bloc Assistance Directe */}
                 <div className="text-center space-y-0.5 bg-gray-50 p-2 rounded-xl border border-gray-100 w-full">
                   <p className="text-[10px] font-black uppercase text-gray-500 tracking-tighter">
-                    Besoin d'aide ? Mot de passe oublié ?
+                    Besoin d'aide ?    Mot de passe oublié ?
                   </p>
                   <p className="text-[11px] font-black text-gray-700">
                     Appelez au <a href="tel:0660419226" className="text-[#4A86B4] underline decoration-2 underline-offset-2">06 60 41 92 26</a>
