@@ -237,14 +237,62 @@ export default function App() {
         )}
 
         {view === 'aide' && (
-          <div className="space-y-4">
-            <button onClick={() => nav('parametres')} className="bg-white border-4 border-[#4A86B4] text-[#4A86B4] px-4 py-2 rounded-xl font-black flex items-center gap-2 mb-2 w-fit shadow-md"><ArrowLeft size={20} /> RETOUR</button>
-            <div className="bg-white/95 p-6 rounded-3xl shadow-xl space-y-6">
+          <div className="space-y-4 pb-10">
+            <button onClick={() => nav('parametres')} className="bg-white border-4 border-[#4A86B4] text-[#4A86B4] px-4 py-2 rounded-xl font-black flex items-center gap-2 mb-2 w-fit shadow-md active:scale-95 transition-transform">
+              <ArrowLeft size={20} /> RETOUR
+            </button>
+            
+            <div className="bg-white/95 p-6 rounded-3xl shadow-xl space-y-6 border-t-8 border-[#4A86B4]">
               <h2 className="text-xl font-black uppercase text-[#4A86B4] border-b-4 border-[#4A86B4] pb-2 text-center italic">Guide AlloBoisset</h2>
-              <section className="space-y-2 text-sm font-bold text-gray-700 leading-tight">
-                <h3 className="font-black text-[#4A86B4] uppercase flex items-center gap-2 text-base"><Car size={20}/> Covoiturer</h3>
-                <p>Proposez ou cherchez un trajet facilement.</p>
-              </section>
+              
+              <div className="space-y-6">
+                {/* Section Covoiturage */}
+                <section className="space-y-2">
+                  <h3 className="font-black text-[#4A86B4] uppercase flex items-center gap-2 text-md">
+                    <Car size={22}/> Covoiturer
+                  </h3>
+                  <ul className="text-[12px] font-bold text-gray-700 leading-tight space-y-1 ml-6 list-disc">
+                    <li>Proposez un trajet en cliquant sur "PROPOSER" (bouton vert).</li>
+                    <li>Cherchez un voisin qui part et appelez-le d'un simple clic.</li>
+                  </ul>
+                </section>
+
+                {/* Section Messages */}
+                <section className="space-y-2">
+                  <h3 className="font-black text-[#4A86B4] uppercase flex items-center gap-2 text-md">
+                    <MessageCircle size={22}/> Mur du Village
+                  </h3>
+                  <ul className="text-[12px] font-bold text-gray-700 leading-tight space-y-1 ml-6 list-disc">
+                    <li>Discutez en direct avec tous les membres dans l'onglet "MESSAGES".</li>
+                    <li>Pratique pour s'organiser ou poser une question à Boisset.</li>
+                  </ul>
+                </section>
+
+                {/* Section Notifications */}
+                <section className="space-y-2 bg-orange-50 p-3 rounded-2xl border-2 border-orange-200">
+                  <h3 className="font-black text-orange-700 uppercase flex items-center gap-2 text-md">
+                    <Bell size={22}/> Alertes en direct
+                  </h3>
+                  <p className="text-[11px] font-bold text-gray-700 leading-tight">
+                    Activez les alertes dans vos <strong>Paramètres</strong> pour ne rien rater. 
+                    Si cela ne fonctionne pas, suivez le guide qui s'affichera pour débloquer votre téléphone.
+                  </p>
+                </section>
+
+                {/* Section Sécurité */}
+                <section className="space-y-2">
+                  <h3 className="font-black text-[#5B8C4E] uppercase flex items-center gap-2 text-md">
+                    <ShieldCheck size={22}/> Confiance
+                  </h3>
+                  <p className="text-[11px] font-bold text-gray-700 leading-tight">
+                    Service solidaire réservé aux habitants. Pensez à mettre à jour votre prénom et numéro pour rassurer vos voisins.
+                  </p>
+                </section>
+              </div>
+
+              <p className="text-center text-[10px] font-black text-gray-400 pt-4 border-t border-gray-100 uppercase italic">
+                Propulsé par la communauté de Boisset
+              </p>
             </div>
           </div>
         )}
