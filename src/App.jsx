@@ -47,6 +47,40 @@ export default function App() {
       setView(newView);
     }
   };
+  
+  // ===================================================================
+  // === DÉBUT DE NOTRE AJOUT : La fonction de notification de contact ===
+  // ===================================================================
+  const contacterEtNotifier = async (trajet) => {
+    try {
+      // On vérifie que ce n'est pas le conducteur qui essaie de s'appeler lui-même
+      if (currentUser.telephone === trajet.driver_id) {
+        // Si c'est le cas, on lance juste l'appel sans notifier
+        window.location.href = `tel:${trajet.driver_id}`;
+        return;
+      }
+      
+      // On appelle notre fonction Supabase "notify-message"
+      await supabase.functions.invoke('notify-message', {
+        body: {
+          userIdToNotify: trajet.driver_id, // On notifie le conducteur du trajet
+          title: `📞 Appel pour un covoit'`,
+          body: `${currentUser.nom} cherche à vous joindre pour le trajet ${trajet.origin} ➔ ${trajet.destination}.`,
+          url: '/' // URL où rediriger l'utilisateur au clic sur la notif
+        }
+      });
+
+    } catch (error) {
+      console.error("Erreur lors de l'envoi de la notification:", error);
+      // Même s'il y a une erreur, on continue pour que l'utilisateur puisse appeler
+    }
+
+    // Après la tentative de notification (réussie ou non), on lance l'appel téléphonique
+    window.location.href = `tel:${trajet.driver_id}`;
+  };
+  // ===============================================================
+  // === FIN DE NOTRE AJOUT                                      ===
+  // ===============================================================
 
   useEffect(() => {
     const handlePopState = (event) => {
@@ -357,7 +391,8 @@ export default function App() {
                   <span>{formatMaDate(t.departure_time)} à {t.departure_time.split(' ')[1]}</span>
                   <span className="text-[10px] bg-gray-100 px-2 py-1 rounded-full uppercase">{t.driver_name.replace('🙋 ', '').replace('🚗 ', '')}</span>
                 </div>
-                <a href={`tel:${t.driver_id}`} className="block w-full bg-[#4A86B4] text-white p-3 rounded-xl font-black text-lg text-center uppercase shadow-lg"><Phone size={20} className="inline mr-2"/> Contacter</a>
+                {/* On remplace le <a> par un <button> qui appelle notre nouvelle fonction */}
+                <button onClick={() => contacterEtNotifier(t)} className="block w-full bg-[#4A86B4] text-white p-3 rounded-xl font-black text-lg text-center uppercase shadow-lg"><Phone size={20} className="inline mr-2"/> Contacter</button>
               </div>
             ))}
           </div>
