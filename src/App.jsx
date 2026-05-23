@@ -31,7 +31,7 @@ export default function App() {
   const messagesEndRef = useRef(null);
   const { subscribeToPush, loading: pushLoading } = usePushNotifications();
 
-  const VERSION = "1.72"; 
+  const VERSION = "1.73"; 
   const LISTE_ADMINS = ["0660419226", "0619872263"]; 
   const EMAIL_ADMIN = "christapor@gmail.com";
   const MAILTO_PIN = `mailto:${EMAIL_ADMIN}?subject=AlloBoisset%20:%20Code%20PIN%20oubli%C3%A9&body=Bonjour%20Chris,%0D%0A%0D%0AJ'ai%20oubli%C3%A9%20mon%20code%20PIN.%20Mon%20num%C3%A9ro%20est%20le%20:`;
@@ -43,7 +43,11 @@ export default function App() {
     }
   };
 
-  const estAdmin = (tel) => LISTE_ADMINS.includes(tel);
+  // Sécurisation du check Admin
+  const estAdmin = (tel) => {
+    if (!tel) return false;
+    return LISTE_ADMINS.includes(String(tel).trim());
+  };
 
   const contacterEtNotifier = async (trajet) => {
     try {
@@ -70,6 +74,7 @@ export default function App() {
         const user = JSON.parse(savedUser);
         setCurrentUser(user); 
         setView('trajets'); 
+        console.log("👤 Utilisateur chargé:", user.nom, "Admin:", estAdmin(user.telephone));
       } catch (e) { localStorage.removeItem('user_boisset'); }
     }
     chargerTrajets();
@@ -136,7 +141,7 @@ export default function App() {
     const prefixe = isDemande ? "🙋 " : "🚗 ";
     const trajetData = {
       origin: depart, destination: arrivee, departure_time: `${dateTrajet} ${heureTrajet}`,
-      driver_id: currentUser.telephone, driver_name: prefixe + currentUser.nom
+      driver_id: String(currentUser.telephone), driver_name: prefixe + currentUser.nom
     };
     const { error } = editId ? await supabase.from('rides').update(trajetData).eq('id', editId) : await supabase.from('rides').insert([trajetData]);
     if (!error) { setArrivee(''); setEditId(null); chargerTrajets(); nav('trajets'); }
@@ -166,7 +171,7 @@ export default function App() {
             <input type="password" inputMode="numeric" maxLength="4" placeholder="CODE PIN (4 CHIFFRES)" value={loginPin} onChange={(e)=>setLoginPin(e.target.value.replace(/\D/g,''))} required className="w-full p-4 text-lg rounded-xl border-4 border-orange-200 font-bold text-center" />
             <label className="flex items-center gap-3 cursor-pointer p-2 bg-orange-50 rounded-xl text-left">
               <input type="checkbox" checked={acceptCGU} onChange={(e)=>setAcceptCGU(e.target.checked)} />
-              <span className="text-[10px] font-black uppercase text-gray-800">J'accepte les conditions d'utilisation</span>
+              <span className="text-[10px] font-black uppercase text-gray-800">J'accepte les conditions</span>
             </label>
             <button type="submit" className="w-full p-4 bg-[#4A86B4] text-white rounded-xl text-xl font-black uppercase shadow-lg">Entrer</button>
             <div className="pt-2 border-t border-gray-100"><a href={MAILTO_PIN} className="text-sm font-black text-[#4A86B4] underline underline-offset-4 italic">PIN oublié ? Cliquez ici</a></div>
@@ -186,8 +191,8 @@ export default function App() {
         )}
 
         {view === 'nouveau' && (
-          <div className="space-y-4">
-            <button onClick={() => nav('trajets')} className="bg-white border-4 border-[#4A86B4] text-[#4A86B4] px-4 py-2 rounded-xl font-black flex items-center gap-2"><ArrowLeft size={24} /> RETOUR</button>
+          <div className="flex flex-col gap-4">
+            <button onClick={() => nav('trajets')} className="bg-white border-4 border-[#4A86B4] text-[#4A86B4] px-4 py-2 rounded-xl font-black flex items-center gap-2 w-fit"><ArrowLeft size={24} /> RETOUR</button>
             <div className={`bg-white/95 p-6 rounded-3xl shadow-lg space-y-4 border-4 ${isDemande ? 'border-[#E67E22]' : 'border-[#5B8C4E]'}`}>
               <h2 className="text-xl font-black text-center uppercase">{editId ? 'Modifier' : (isDemande ? 'Je cherche' : 'Je propose')}</h2>
               <input type="text" placeholder="DÉPART" value={depart} onChange={(e)=>setDepart(e.target.value)} className="w-full p-4 border-2 rounded-xl font-bold" />
@@ -208,7 +213,7 @@ export default function App() {
               <div key={t.id} className="bg-white/95 p-5 rounded-[2rem] shadow-md border-l-8 border-[#4A86B4]">
                 <div className="flex justify-between items-start mb-2">
                   <p className="font-black text-xl uppercase leading-none">{t.origin} ➔ {t.destination}</p>
-                  {(t.driver_id === currentUser?.telephone || estAdmin(currentUser?.telephone)) && (
+                  {(String(t.driver_id) === String(currentUser?.telephone) || estAdmin(currentUser?.telephone)) && (
                     <div className="flex gap-2">
                       <button onClick={() => {setEditId(t.id); setDepart(t.origin); setArrivee(t.destination); setDateTrajet(t.departure_time.split(' ')[0]); setHeureTrajet(t.departure_time.split(' ')[1]); setIsDemande(t.driver_name.includes('🙋')); nav('nouveau');}} className="text-blue-500 bg-blue-50 p-2 rounded-full"><Edit size={20}/></button>
                       <button onClick={async () => {if(window.confirm("Supprimer ?")){await supabase.from('rides').delete().eq('id', t.id); chargerTrajets();}}} className="text-red-500 bg-red-50 p-2 rounded-full"><Trash2 size={20}/></button>
@@ -231,7 +236,7 @@ export default function App() {
                         <div className="flex justify-between">
                           <p className="text-[10px] font-black text-gray-500 uppercase">{m.sender_name}</p>
                           {(m.sender_name === currentUser?.nom || estAdmin(currentUser?.telephone)) && (
-                            <button onClick={() => supprimerMessage(m.id)} className="text-red-400"><Trash2 size={14}/></button>
+                            <button onClick={() => supprimerMessage(m.id)} className="text-red-400 p-1"><Trash2 size={16}/></button>
                           )}
                         </div>
                         <p className="text-sm font-bold leading-tight">{m.text}</p>
@@ -251,8 +256,8 @@ export default function App() {
             <div className="bg-white/95 p-6 rounded-3xl shadow-xl space-y-4">
               <h2 className="text-xl font-black uppercase text-[#4A86B4] border-b-4 border-[#4A86B4] pb-2 italic text-center">Mode d'emploi</h2>
               <div className="space-y-4 text-xs font-bold text-gray-700">
-                <div className="bg-blue-50 p-4 rounded-2xl border-2 border-blue-200"><p className="font-black text-blue-800 mb-2">ANDROID</p><p>Installer via Chrome (3 points > Installer). Autoriser les notifs dans les réglages du tél.</p></div>
-                <div className="bg-purple-50 p-4 rounded-2xl border-2 border-purple-200"><p className="font-black text-purple-800 mb-2">IPHONE</p><p>Installer via Safari (Partager > Sur l'écran d'accueil). Activer les alertes dans les réglages de l'iPhone.</p></div>
+                <div className="bg-blue-50 p-4 rounded-2xl border-2 border-blue-200"><p className="font-black text-blue-800 mb-2 uppercase">Android</p><p>Installer via Chrome (3 points > Installer). Autoriser les notifs dans les réglages du tél.</p></div>
+                <div className="bg-purple-50 p-4 rounded-2xl border-2 border-purple-200"><p className="font-black text-purple-800 mb-2 uppercase">iPhone</p><p>Installer via Safari (Partager > Sur l'écran d'accueil). Activer les alertes dans les réglages de l'iPhone.</p></div>
               </div>
             </div>
           </div>
