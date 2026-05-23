@@ -12,6 +12,7 @@ export default function App() {
   const [currentUser, setCurrentUser] = useState(null);
   const [view, setView] = useState('login'); 
   const [loginPrenom, setLoginPrenom] = useState('');
+  const [loginNomFamille, setLoginNomFamille] = useState(''); // État pour le nom
   const [loginTel, setLoginTel] = useState(localStorage.getItem('last_tel') || '');
   const [loginPin, setLoginPin] = useState('');
   const [acceptCGU, setAcceptCGU] = useState(false);
@@ -30,7 +31,9 @@ export default function App() {
   const messagesEndRef = useRef(null);
   const { subscribeToPush, loading: pushLoading } = usePushNotifications();
 
-  const VERSION = "1.70"; 
+  const VERSION = "1.71"; 
+  const EMAIL_ADMIN = "christapor@gmail.com";
+  const MAILTO_PIN = `mailto:${EMAIL_ADMIN}?subject=AlloBoisset%20:%20Code%20PIN%20oubli%C3%A9&body=Bonjour%20Chris,%0D%0A%0D%0AJ'ai%20oubli%C3%A9%20mon%20code%20PIN.%20Mon%20num%C3%A9ro%20est%20le%20:`;
 
   const nav = (newView) => {
     if (newView !== view) {
@@ -97,7 +100,6 @@ export default function App() {
     if (!error) {
       setNouveauMessage('');
       chargerMessages();
-      // NOTIFICATION MUR DU VILLAGE (BROADCAST)
       supabase.functions.invoke('notify-message', {
         body: {
           broadcast: true,
@@ -111,10 +113,24 @@ export default function App() {
 
   const handleLogin = async (e) => {
     if (e) e.preventDefault();
-    if (!acceptCGU) return alert("Veuillez accepter les conditions.");
-    const user = { nom: loginPrenom.trim(), telephone: loginTel, pin: loginPin };
+    if (!acceptCGU) return alert("Veuillez valider les conditions d'utilisation.");
+    if (!loginPrenom.trim() || !loginTel.trim() || loginPin.length !== 4) return alert("Prénom, Téléphone et PIN requis.");
+    
+    // Formatage du nom : Prénom + Initiale du nom (ex: Chris T.)
+    const nomConvivial = loginNomFamille.trim() 
+      ? `${loginPrenom.trim()} ${loginNomFamille.trim().charAt(0).toUpperCase()}.` 
+      : loginPrenom.trim();
+
+    const user = { nom: nomConvivial, telephone: loginTel, pin: loginPin };
+    
+    // Sauvegarde Profil dans Supabase
+    const { data: profile } = await supabase.from('profiles').select('*').eq('phone', loginTel).maybeSingle();
+    if (profile && profile.pin !== loginPin) return alert(`Code PIN incorrect !`);
+    else if (!profile) await supabase.from('profiles').insert([{ phone: loginTel, pin: loginPin, name: nomConvivial }]);
+
     setCurrentUser(user);
     localStorage.setItem('user_boisset', JSON.stringify(user));
+    localStorage.setItem('last_tel', loginTel);
     nav('trajets');
   };
 
@@ -133,14 +149,28 @@ export default function App() {
         {view === 'login' && (
           <form onSubmit={handleLogin} className="bg-white/95 p-6 rounded-3xl shadow-xl mt-2 border-2 border-[#4A86B4] space-y-4 text-center">
             <h2 className="text-xl font-black uppercase italic">Identification</h2>
+            
             <input type="text" placeholder="PRÉNOM" value={loginPrenom} onChange={(e)=>setLoginPrenom(e.target.value)} required className="w-full p-4 text-lg rounded-xl border-4 border-gray-100 font-bold" />
+            
+            <div className="space-y-1">
+              <input type="text" placeholder="NOM (FACULTATIF)" value={loginNomFamille} onChange={(e)=>setLoginNomFamille(e.target.value)} className="w-full p-4 text-lg rounded-xl border-4 border-gray-100 font-bold" />
+              <p className="text-[9px] font-bold text-gray-400 italic">Seule l'initiale de votre nom sera visible (ex: {loginPrenom || 'Chris'} {loginNomFamille ? loginNomFamille.charAt(0).toUpperCase() + '.' : 'T.'})</p>
+            </div>
+
             <input type="tel" placeholder="TÉLÉPHONE" value={loginTel} onChange={(e)=>setLoginTel(e.target.value)} required className="w-full p-4 text-lg rounded-xl border-4 border-gray-100 font-bold" />
-            <input type="password" placeholder="CODE PIN" value={loginPin} onChange={(e)=>setLoginPin(e.target.value)} required className="w-full p-4 text-lg rounded-xl border-4 border-orange-200 font-bold text-center" />
-            <label className="flex items-center gap-3 cursor-pointer p-2 bg-orange-50 rounded-xl">
+            
+            <input type="password" inputMode="numeric" maxLength="4" placeholder="CODE PIN (4 CHIFFRES)" value={loginPin} onChange={(e)=>setLoginPin(e.target.value.replace(/\D/g,''))} required className="w-full p-4 text-lg rounded-xl border-4 border-orange-200 font-bold text-center" />
+            
+            <label className="flex items-center gap-3 cursor-pointer p-2 bg-orange-50 rounded-xl text-left">
               <input type="checkbox" checked={acceptCGU} onChange={(e)=>setAcceptCGU(e.target.checked)} />
-              <span className="text-[10px] font-black uppercase text-gray-800">J'accepte les conditions</span>
+              <span className="text-[10px] font-black uppercase text-gray-800 leading-tight">Je certifie être assuré et j'accepte les conditions d'utilisation</span>
             </label>
+            
             <button type="submit" className="w-full p-4 bg-[#4A86B4] text-white rounded-xl text-xl font-black uppercase shadow-lg">Entrer</button>
+            
+            <div className="pt-2 border-t border-gray-100">
+              <a href={MAILTO_PIN} className="text-sm font-black text-[#4A86B4] underline underline-offset-4 italic">PIN oublié ? Cliquez ici</a>
+            </div>
           </form>
         )}
 
@@ -177,15 +207,10 @@ export default function App() {
                   <p className="font-black text-purple-800 flex items-center gap-2 mb-2"><Smartphone size={20}/> SUR IPHONE</p>
                   <ol className="text-xs font-bold text-gray-700 space-y-2 list-decimal ml-4">
                     <li>Ouvrez AlloBoisset dans Safari.</li>
-                    <li>Appuyez sur le bouton <b>Partager</b> (carré avec une flèche).</li>
-                    <li>Faites défiler et appuyez sur <b>"Sur l'écran d'accueil"</b>.</li>
-                    <li>Ouvrez l'icône créée sur votre écran, allez dans Réglages et activez les alertes.</li>
+                    <li>Appuyez sur le bouton <b>Partager</b> (en bas).</li>
+                    <li>Choisissez <b>"Sur l'écran d'accueil"</b>.</li>
+                    <li>Ouvrez l'icône sur votre écran, allez dans Réglages et activez les alertes.</li>
                   </ol>
-                </div>
-
-                <div className="bg-orange-50 p-4 rounded-2xl border-2 border-orange-200">
-                  <p className="font-black text-orange-800 flex items-center gap-2 mb-2"><Bell size={20}/> LES NOTIFICATIONS</p>
-                  <p className="text-xs font-bold text-gray-700">Une fois l'app installée, allez dans <b>"RÉGLAGES"</b> (en bas à droite) et appuyez sur le gros bouton orange <b>"Activer les alertes"</b>. C'est l'étape cruciale !</p>
                 </div>
               </div>
             </div>
