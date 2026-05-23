@@ -34,7 +34,7 @@ export default function App() {
   // Initialisation de la logique de notifications
   const { subscribeToPush, loading: pushLoading } = usePushNotifications();
 
-  const VERSION = "1.61"; // MAJ : Intégration Notifications Web Push
+  const VERSION = "1.62"; // MAJ : Correction CORS et Multi-devices
   const EMAIL_ADMIN = "christapor@gmail.com"; 
   const LISTE_ADMINS = ["0660419226", "0619872263"]; 
   const LISTE_NOIRE = ["merde", "putain", "connard", "salope"]; 
@@ -48,39 +48,31 @@ export default function App() {
     }
   };
   
-  // ===================================================================
-  // === DÉBUT DE NOTRE AJOUT : La fonction de notification de contact ===
-  // ===================================================================
   const contacterEtNotifier = async (trajet) => {
     try {
-      // On vérifie que ce n'est pas le conducteur qui essaie de s'appeler lui-même
       if (currentUser.telephone === trajet.driver_id) {
-        // Si c'est le cas, on lance juste l'appel sans notifier
         window.location.href = `tel:${trajet.driver_id}`;
         return;
       }
       
-      // On appelle notre fonction Supabase "notify-message"
-      await supabase.functions.invoke('notify-message', {
+      // On déclenche l'appel à la Edge Function
+      supabase.functions.invoke('notify-message', {
         body: {
-          userIdToNotify: trajet.driver_id, // On notifie le conducteur du trajet
+          userIdToNotify: trajet.driver_id,
           title: `📞 Appel pour un covoit'`,
           body: `${currentUser.nom} cherche à vous joindre pour le trajet ${trajet.origin} ➔ ${trajet.destination}.`,
-          url: '/' // URL où rediriger l'utilisateur au clic sur la notif
+          url: '/' 
         }
       });
 
+      // On lance l'appel téléphonique immédiatement sans attendre la réponse de la notif
+      window.location.href = `tel:${trajet.driver_id}`;
+
     } catch (error) {
       console.error("Erreur lors de l'envoi de la notification:", error);
-      // Même s'il y a une erreur, on continue pour que l'utilisateur puisse appeler
+      window.location.href = `tel:${trajet.driver_id}`;
     }
-
-    // Après la tentative de notification (réussie ou non), on lance l'appel téléphonique
-    window.location.href = `tel:${trajet.driver_id}`;
   };
-  // ===============================================================
-  // === FIN DE NOTRE AJOUT                                      ===
-  // ===============================================================
 
   useEffect(() => {
     const handlePopState = (event) => {
@@ -226,17 +218,14 @@ export default function App() {
         {view === 'login' && (
           <form onSubmit={handleLogin} className="bg-white/95 p-6 rounded-3xl shadow-xl mt-2 border-2 border-[#4A86B4] space-y-4 text-center">
             <h2 className="text-xl font-black uppercase italic">Identification</h2>
-            
             <div className="bg-blue-50 p-3 rounded-2xl border-2 border-[#4A86B4]/30 flex items-start gap-2 text-left">
               <Info size={24} className="text-[#4A86B4] shrink-0 mt-1" />
               <p className="text-[11px] font-bold text-gray-700 leading-tight"><span className="text-[#4A86B4] uppercase block mb-1">Première connexion ?</span>Choisissez un code PIN de votre choix (4 chiffres).</p>
             </div>
-
             <input type="text" placeholder="PRÉNOM" value={loginPrenom} onChange={(e)=>setLoginPrenom(e.target.value)} required className="w-full p-4 text-lg rounded-xl border-4 border-gray-100 font-bold" />
             <input type="text" placeholder="NOM (FACULTATIF)" value={loginNomFamille} onChange={(e)=>setLoginNomFamille(e.target.value)} className="w-full p-4 text-lg rounded-xl border-4 border-gray-100 font-bold bg-gray-50/50" />
             <input type="tel" placeholder="TÉLÉPHONE" value={loginTel} onChange={(e)=>setLoginTel(e.target.value)} required className="w-full p-4 text-lg rounded-xl border-4 border-gray-100 font-bold" />
             <input type="password" inputMode="numeric" maxLength="4" placeholder="CODE PIN" value={loginPin} onChange={(e)=>setLoginPin(e.target.value.replace(/\D/g,''))} required className="w-full p-4 text-lg rounded-xl border-4 border-orange-200 font-bold text-center" />
-
             <div className={`p-4 rounded-2xl border-2 transition-all text-left space-y-3 ${acceptCGU ? 'bg-green-50 border-green-500' : 'bg-orange-50 border-orange-300'}`}>
               <div className="text-[10px] font-bold text-gray-700 leading-tight space-y-2">
                 <p>🚗 <span className="text-[#4A86B4]">CONDUCTEURS :</span> Je certifie être assuré(e), être en possession d'un permis de conduire valable et à jour, et je reconnais que l'application AlloBoisset décline toute responsabilité en cas d'incident.</p>
@@ -247,9 +236,7 @@ export default function App() {
                 <span className="text-[11px] font-black uppercase text-gray-800">J'accepte ces conditions</span>
               </label>
             </div>
-
             <button type="submit" className={`w-full p-4 rounded-xl text-xl font-black uppercase shadow-lg transition-all ${acceptCGU ? 'bg-[#4A86B4] text-white' : 'bg-gray-300 text-gray-500 cursor-not-allowed'}`}>Entrer</button>
-            
             <div className="pt-2 border-t border-gray-100">
               <a href={MAILTO_PIN} className="text-sm font-black text-[#4A86B4] underline decoration-2 underline-offset-4">PIN oublié ? Cliquez ici</a>
             </div>
@@ -265,81 +252,6 @@ export default function App() {
               <div className="grid grid-cols-2 gap-3 pt-1">
                 <button onClick={() => {setIsDemande(false); setEditId(null); nav('nouveau');}} className="flex flex-col items-center justify-center p-3 rounded-[1.5rem] shadow-lg bg-[#5B8C4E] text-white font-black text-sm uppercase"><Plus size={30} className="mb-1" />Proposer</button>
                 <button onClick={() => {setIsDemande(true); setEditId(null); nav('nouveau');}} className="flex flex-col items-center justify-center p-3 rounded-[1.5rem] shadow-lg bg-[#E67E22] text-white font-black text-sm uppercase"><HelpCircle size={30} className="mb-1" />Demander</button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {view === 'aide' && (
-          <div className="space-y-4 pb-10">
-            <button onClick={() => nav('parametres')} className="bg-white border-4 border-[#4A86B4] text-[#4A86B4] px-4 py-2 rounded-xl font-black flex items-center gap-2 mb-2 w-fit shadow-md active:scale-95 transition-transform">
-              <ArrowLeft size={20} /> RETOUR
-            </button>
-            
-            <div className="bg-white/95 p-6 rounded-3xl shadow-xl space-y-6 border-t-8 border-[#4A86B4]">
-              <h2 className="text-xl font-black uppercase text-[#4A86B4] border-b-4 border-[#4A86B4] pb-2 text-center italic">Guide AlloBoisset</h2>
-              
-              <div className="space-y-6">
-                {/* Section Covoiturage */}
-                <section className="space-y-2">
-                  <h3 className="font-black text-[#4A86B4] uppercase flex items-center gap-2 text-md">
-                    <Car size={22}/> Covoiturer
-                  </h3>
-                  <ul className="text-[12px] font-bold text-gray-700 leading-tight space-y-1 ml-6 list-disc">
-                    <li>Proposez un trajet en cliquant sur "PROPOSER" (bouton vert).</li>
-                    <li>Cherchez un voisin qui part et appelez-le d'un simple clic.</li>
-                  </ul>
-                </section>
-
-                {/* Section Messages */}
-                <section className="space-y-2">
-                  <h3 className="font-black text-[#4A86B4] uppercase flex items-center gap-2 text-md">
-                    <MessageCircle size={22}/> Mur du Village
-                  </h3>
-                  <ul className="text-[12px] font-bold text-gray-700 leading-tight space-y-1 ml-6 list-disc">
-                    <li>Discutez en direct avec tous les membres dans l'onglet "MESSAGES".</li>
-                    <li>Pratique pour s'organiser ou poser une question à Boisset.</li>
-                  </ul>
-                </section>
-
-                {/* Section Notifications */}
-                <section className="space-y-2 bg-orange-50 p-3 rounded-2xl border-2 border-orange-200">
-                  <h3 className="font-black text-orange-700 uppercase flex items-center gap-2 text-md">
-                    <Bell size={22}/> Alertes en direct
-                  </h3>
-                  <p className="text-[11px] font-bold text-gray-700 leading-tight">
-                    Activez les alertes dans vos <strong>Paramètres</strong> pour ne rien rater. 
-                    Si cela ne fonctionne pas, suivez le guide qui s'affichera pour débloquer votre téléphone, en cliquant sur "Activez les Alertes".
-                  </p>
-                </section>
-
-                {/* Section Sécurité */}
-                <section className="space-y-2">
-                  <h3 className="font-black text-[#5B8C4E] uppercase flex items-center gap-2 text-md">
-                    <ShieldCheck size={22}/> Confiance
-                  </h3>
-                  <p className="text-[11px] font-bold text-gray-700 leading-tight">
-                    Service solidaire réservé aux habitants. Pensez à mettre à jour votre prénom et numéro pour rassurer vos voisins.
-                  </p>
-                </section>
-              </div>
-
-              <p className="text-center text-[10px] font-black text-gray-400 pt-4 border-t border-gray-100 uppercase italic">
-                Propulsé par la communauté de Boisset
-              </p>
-            </div>
-          </div>
-        )}
-
-        {view === 'cgu' && (
-          <div className="space-y-4">
-            <button onClick={() => nav('parametres')} className="bg-white border-4 border-[#4A86B4] text-[#4A86B4] px-4 py-2 rounded-xl font-black flex items-center gap-2 mb-2 w-fit shadow-md"><ArrowLeft size={20} /> RETOUR</button>
-            <div className="bg-white/95 p-6 rounded-3xl shadow-xl space-y-4 text-gray-800">
-              <h2 className="text-xl font-black uppercase text-[#4A86B4] border-b-4 border-[#4A86B4] pb-2 text-center italic">Conditions Générales</h2>
-              <div className="text-[11px] font-bold leading-tight space-y-3 overflow-y-auto max-h-[60vh] pr-2">
-                <p><strong>1. SERVICE :</strong> AlloBoisset est un outil technique de mise en relation citoyenne.</p>
-                <p><strong>2. GRATUITÉ :</strong> Le partage de frais est interdit.</p>
-                <p><strong>3. ASSURANCES :</strong> Le conducteur certifie être assuré.</p>
               </div>
             </div>
           </div>
@@ -391,7 +303,6 @@ export default function App() {
                   <span>{formatMaDate(t.departure_time)} à {t.departure_time.split(' ')[1]}</span>
                   <span className="text-[10px] bg-gray-100 px-2 py-1 rounded-full uppercase">{t.driver_name.replace('🙋 ', '').replace('🚗 ', '')}</span>
                 </div>
-                {/* On remplace le <a> par un <button> qui appelle notre nouvelle fonction */}
                 <button onClick={() => contacterEtNotifier(t)} className="block w-full bg-[#4A86B4] text-white p-3 rounded-xl font-black text-lg text-center uppercase shadow-lg"><Phone size={20} className="inline mr-2"/> Contacter</button>
               </div>
             ))}
@@ -417,21 +328,14 @@ export default function App() {
         {view === 'parametres' && (
           <div className="space-y-4 px-2">
             <div className="bg-white/95 p-4 rounded-3xl shadow-xl border-4 border-[#4A86B4] text-center space-y-4">
-              
-              {/* BLOC NOTIFICATIONS WEB PUSH */}
               <div className="bg-orange-50 p-3 rounded-2xl border-2 border-orange-200 flex flex-col items-center gap-2">
                 <p className="text-[11px] font-black uppercase text-orange-700">Restez informé des trajets</p>
-                <button 
-                  onClick={subscribeToPush} 
-                  disabled={pushLoading}
-                  className={`w-full ${pushLoading ? 'bg-gray-400' : 'bg-orange-500'} text-white p-3 rounded-xl font-black uppercase flex items-center justify-center gap-2 shadow-md transition-transform active:scale-95`}
-                >
+                <button onClick={subscribeToPush} disabled={pushLoading} className={`w-full ${pushLoading ? 'bg-gray-400' : 'bg-orange-500'} text-white p-3 rounded-xl font-black uppercase flex items-center justify-center gap-2 shadow-md transition-transform active:scale-95`}>
                   <Bell size={20} className={pushLoading ? 'animate-pulse' : ''} />
                   {pushLoading ? 'Activation...' : 'Activer les alertes'}
                 </button>
                 <p className="text-[9px] font-bold text-orange-600 italic leading-none">Recommandé pour recevoir les alertes en direct</p>
               </div>
-
               <div className="flex flex-col items-center gap-3 pt-2">
                 <div className="flex items-center justify-center gap-4">
                   <div className="w-12 h-12 bg-[#4A86B4] rounded-full flex items-center justify-center text-white shadow-md">
@@ -439,39 +343,20 @@ export default function App() {
                   </div>
                   <div className="text-left font-black">
                     <h2 className="text-lg uppercase leading-none">{currentUser?.nom}</h2>
-                    <a href={`tel:${currentUser?.telephone}`} className="text-md text-[#4A86B4] block hover:underline">
-                      {currentUser?.telephone}
-                    </a>
+                    <a href={`tel:${currentUser?.telephone}`} className="text-md text-[#4A86B4] block hover:underline">{currentUser?.telephone}</a>
                   </div>
-                </div>
-
-                {/* Bloc Assistance Directe */}
-                <div className="text-center space-y-0.5 bg-gray-50 p-2 rounded-xl border border-gray-100 w-full">
-                  <p className="text-[10px] font-black uppercase text-gray-500 tracking-tighter">
-                    Besoin d'aide ?    Mot de passe oublié ?
-                  </p>
-                  <p className="text-[11px] font-black text-gray-700">
-                    Appelez au <a href="tel:0660419226" className="text-[#4A86B4] underline decoration-2 underline-offset-2">06 60 41 92 26</a>
-                  </p>
                 </div>
               </div>
-
-              <button onClick={() => nav('aide')} className="w-full bg-[#4A86B4] text-white p-3 rounded-xl font-black uppercase flex items-center justify-center gap-2 shadow-md"><Info size={20}/> Mode d'emploi</button>
-              <button onClick={() => nav('cgu')} className="w-full bg-gray-100 text-gray-700 p-3 rounded-xl font-black uppercase flex items-center justify-center gap-2 shadow-sm border-2 border-gray-200"><FileText size={20}/> Conditions Générales</button>
-              
-              {!confirmLogout ? (<button onClick={() => setConfirmLogout(true)} className="w-full border-2 border-red-500 text-red-500 p-2 rounded-xl font-black uppercase text-[12px]">Se déconnecter</button>) : (
-                <div className="flex flex-col gap-2 p-2 bg-red-50 rounded-xl border-2 border-red-200">
-                  <p className="font-black text-red-600 text-sm italic leading-tight">Déconnexion ?</p>
-                  <div className="flex gap-2 justify-center">
-                    <button onClick={() => {localStorage.removeItem('user_boisset'); nav('login'); setCurrentUser(null); setConfirmLogout(false); setAcceptCGU(false);}} className="bg-red-600 text-white px-6 py-2 rounded-lg font-black text-sm">OUI</button>
+              <button onClick={() => setConfirmLogout(true)} className="w-full border-2 border-red-500 text-red-500 p-2 rounded-xl font-black uppercase text-[12px]">Se déconnecter</button>
+              {confirmLogout && (
+                 <div className="flex gap-2 justify-center mt-2">
+                    <button onClick={() => {localStorage.removeItem('user_boisset'); nav('login'); setCurrentUser(null);}} className="bg-red-600 text-white px-6 py-2 rounded-lg font-black text-sm">OUI</button>
                     <button onClick={() => setConfirmLogout(false)} className="bg-gray-200 text-gray-700 px-6 py-2 rounded-lg font-black text-sm">NON</button>
-                  </div>
-                </div>
+                 </div>
               )}
             </div>
             <div className="bg-white/90 p-3 rounded-2xl border-4 border-[#4A86B4] text-center shadow-md">
               <p className="text-md font-black text-[#4A86B4] uppercase leading-none tracking-tight">VERSION {VERSION}</p>
-              <p className="text-[12px] font-black text-[#4A86B4] uppercase mt-1 italic tracking-tight">Gracieusement propulsé par Chris TAPOR</p>
             </div>
           </div>
         )}
@@ -479,9 +364,9 @@ export default function App() {
 
       {currentUser && (
         <nav className="fixed bottom-0 w-full bg-white/90 backdrop-blur-md border-t-8 border-[#4A86B4] flex justify-around p-2 shadow-2xl z-30">
-          <button onClick={() => {nav('trajets'); setConfirmLogout(false);}} className={`flex flex-col items-center font-black text-[10px] uppercase ${['trajets', 'liste_offres', 'liste_demandes', 'nouveau'].includes(view) ? 'text-[#4A86B4]' : 'text-gray-400'}`}><Car size={32} /> Accueil</button>
-          <button onClick={() => {nav('messages'); setConfirmLogout(false); chargerMessages();}} className={`flex flex-col items-center font-black text-[10px] uppercase ${view === 'messages' ? 'text-[#4A86B4]' : 'text-gray-400'}`}><MessageCircle size={32} /> Messages</button>
-          <button onClick={() => {nav('parametres'); setConfirmLogout(false);}} className={`flex flex-col items-center font-black text-[10px] uppercase ${['parametres', 'aide', 'cgu'].includes(view) ? 'text-[#4A86B4]' : 'text-gray-400'}`}><ShieldCheck size={32} /> Paramètres</button>
+          <button onClick={() => nav('trajets')} className={`flex flex-col items-center font-black text-[10px] uppercase ${view === 'trajets' ? 'text-[#4A86B4]' : 'text-gray-400'}`}><Car size={32} /> Accueil</button>
+          <button onClick={() => {nav('messages'); chargerMessages();}} className={`flex flex-col items-center font-black text-[10px] uppercase ${view === 'messages' ? 'text-[#4A86B4]' : 'text-gray-400'}`}><MessageCircle size={32} /> Messages</button>
+          <button onClick={() => nav('parametres')} className={`flex flex-col items-center font-black text-[10px] uppercase ${view === 'parametres' ? 'text-[#4A86B4]' : 'text-gray-400'}`}><ShieldCheck size={32} /> Paramètres</button>
         </nav>
       )}
     </div>
