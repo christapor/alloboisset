@@ -3,7 +3,7 @@ import { supabase } from './lib/supabaseClient';
 import { 
   Car, User, MessageCircle, Plus, ArrowLeft, Trash2, Phone, 
   ShieldCheck, Users, Edit, HelpCircle, Share2, Send, Info, 
-  FileText, CheckCircle2, Bell 
+  FileText, CheckCircle2, Bell, Smartphone 
 } from 'lucide-react';
 
 import { usePushNotifications } from './hooks/usePushNotifications';
@@ -12,7 +12,6 @@ export default function App() {
   const [currentUser, setCurrentUser] = useState(null);
   const [view, setView] = useState('login'); 
   const [loginPrenom, setLoginPrenom] = useState('');
-  const [loginNomFamille, setLoginNomFamille] = useState('');
   const [loginTel, setLoginTel] = useState(localStorage.getItem('last_tel') || '');
   const [loginPin, setLoginPin] = useState('');
   const [acceptCGU, setAcceptCGU] = useState(false);
@@ -31,7 +30,7 @@ export default function App() {
   const messagesEndRef = useRef(null);
   const { subscribeToPush, loading: pushLoading } = usePushNotifications();
 
-  const VERSION = "1.65"; 
+  const VERSION = "1.70"; 
 
   const nav = (newView) => {
     if (newView !== view) {
@@ -39,10 +38,9 @@ export default function App() {
       setView(newView);
     }
   };
-  
+
   const contacterEtNotifier = async (trajet) => {
     try {
-      // On envoie la notification sans bloquer l'utilisateur
       supabase.functions.invoke('notify-message', {
         body: {
           userIdToNotify: trajet.driver_id,
@@ -51,10 +49,7 @@ export default function App() {
           url: '/' 
         }
       });
-    } catch (err) {
-      console.error("Erreur notif:", err);
-    }
-    // Lancement de l'appel
+    } catch (err) { console.error(err); }
     window.location.href = `tel:${trajet.driver_id}`;
   };
 
@@ -96,8 +91,22 @@ export default function App() {
   const envoyerMessage = async (e) => {
     if (e) e.preventDefault();
     if (!nouveauMessage.trim()) return;
-    const { error } = await supabase.from('village_messages').insert([{ sender_name: currentUser.nom, text: nouveauMessage.trim() }]);
-    if (!error) { setNouveauMessage(''); chargerMessages(); }
+    const texte = nouveauMessage.trim();
+    const { error } = await supabase.from('village_messages').insert([{ sender_name: currentUser.nom, text: texte }]);
+    
+    if (!error) {
+      setNouveauMessage('');
+      chargerMessages();
+      // NOTIFICATION MUR DU VILLAGE (BROADCAST)
+      supabase.functions.invoke('notify-message', {
+        body: {
+          broadcast: true,
+          title: `💬 Mur du village`,
+          body: `${currentUser.nom} : ${texte.substring(0, 50)}...`,
+          url: '/messages'
+        }
+      });
+    }
   };
 
   const handleLogin = async (e) => {
@@ -111,13 +120,11 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-fixed bg-cover font-sans flex flex-col select-none" style={{ backgroundImage: "linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), url('/alloboisset_fond.jpg')", backgroundPosition: 'center top' }}>
+      
       <header className="bg-white/90 shadow-xl p-3 sticky top-0 z-20 border-b-8 border-[#4A86B4] flex flex-col items-center backdrop-blur-sm">
         <div className="flex items-center gap-5 w-full justify-between px-4">
           <img src="/blason.png" className="h-10 w-10 object-contain" alt="Logo" />
-          <div className="flex flex-col text-center">
-            <h1 className="text-xl font-black text-[#4A86B4] uppercase tracking-tighter">AlloBoisset</h1>
-            <p className="text-[9px] font-black text-[#5B8C4E] uppercase border-t-2 border-[#5B8C4E] pt-1">Covoiturage Villageois</p>
-          </div>
+          <h1 className="text-xl font-black text-[#4A86B4] uppercase tracking-tighter">AlloBoisset</h1>
           <button onClick={() => navigator.share({url: window.location.href})} className="text-[#4A86B4] p-2 rounded-full"><Share2 size={24}/></button>
         </div>
       </header>
@@ -131,7 +138,7 @@ export default function App() {
             <input type="password" placeholder="CODE PIN" value={loginPin} onChange={(e)=>setLoginPin(e.target.value)} required className="w-full p-4 text-lg rounded-xl border-4 border-orange-200 font-bold text-center" />
             <label className="flex items-center gap-3 cursor-pointer p-2 bg-orange-50 rounded-xl">
               <input type="checkbox" checked={acceptCGU} onChange={(e)=>setAcceptCGU(e.target.checked)} />
-              <span className="text-[10px] font-black uppercase text-gray-800">J'accepte les conditions d'utilisation</span>
+              <span className="text-[10px] font-black uppercase text-gray-800">J'accepte les conditions</span>
             </label>
             <button type="submit" className="w-full p-4 bg-[#4A86B4] text-white rounded-xl text-xl font-black uppercase shadow-lg">Entrer</button>
           </form>
@@ -145,6 +152,42 @@ export default function App() {
             <div className="grid grid-cols-2 gap-3">
               <button onClick={() => {setIsDemande(false); setEditId(null); nav('nouveau');}} className="p-4 rounded-2xl shadow-lg bg-[#5B8C4E] text-white font-black uppercase flex flex-col items-center"><Plus size={30} />Proposer</button>
               <button onClick={() => {setIsDemande(true); setEditId(null); nav('nouveau');}} className="p-4 rounded-2xl shadow-lg bg-[#E67E22] text-white font-black uppercase flex flex-col items-center"><HelpCircle size={30} />Demander</button>
+            </div>
+          </div>
+        )}
+
+        {view === 'aide' && (
+          <div className="flex-1 flex flex-col gap-4">
+            <button onClick={() => nav('parametres')} className="bg-white border-4 border-[#4A86B4] text-[#4A86B4] px-4 py-2 rounded-xl font-black flex items-center gap-2 w-fit shadow-md"><ArrowLeft size={24} /> RETOUR</button>
+            <div className="bg-white/95 p-6 rounded-3xl shadow-xl space-y-6">
+              <h2 className="text-xl font-black uppercase text-[#4A86B4] border-b-4 border-[#4A86B4] pb-2 italic text-center">Mode d'emploi</h2>
+              
+              <div className="space-y-4">
+                <div className="bg-blue-50 p-4 rounded-2xl border-2 border-blue-200">
+                  <p className="font-black text-blue-800 flex items-center gap-2 mb-2"><Smartphone size={20}/> SUR ANDROID</p>
+                  <ol className="text-xs font-bold text-gray-700 space-y-2 list-decimal ml-4">
+                    <li>Ouvrez AlloBoisset dans Chrome.</li>
+                    <li>Appuyez sur les 3 points (en haut à droite).</li>
+                    <li>Choisissez <b>"Installer l'application"</b>.</li>
+                    <li>Allez dans vos réglages téléphone > Notifications > AlloBoisset et autorisez tout.</li>
+                  </ol>
+                </div>
+
+                <div className="bg-purple-50 p-4 rounded-2xl border-2 border-purple-200">
+                  <p className="font-black text-purple-800 flex items-center gap-2 mb-2"><Smartphone size={20}/> SUR IPHONE</p>
+                  <ol className="text-xs font-bold text-gray-700 space-y-2 list-decimal ml-4">
+                    <li>Ouvrez AlloBoisset dans Safari.</li>
+                    <li>Appuyez sur le bouton <b>Partager</b> (carré avec une flèche).</li>
+                    <li>Faites défiler et appuyez sur <b>"Sur l'écran d'accueil"</b>.</li>
+                    <li>Ouvrez l'icône créée sur votre écran, allez dans Réglages et activez les alertes.</li>
+                  </ol>
+                </div>
+
+                <div className="bg-orange-50 p-4 rounded-2xl border-2 border-orange-200">
+                  <p className="font-black text-orange-800 flex items-center gap-2 mb-2"><Bell size={20}/> LES NOTIFICATIONS</p>
+                  <p className="text-xs font-bold text-gray-700">Une fois l'app installée, allez dans <b>"RÉGLAGES"</b> (en bas à droite) et appuyez sur le gros bouton orange <b>"Activer les alertes"</b>. C'est l'étape cruciale !</p>
+                </div>
+              </div>
             </div>
           </div>
         )}
@@ -182,28 +225,30 @@ export default function App() {
 
         {view === 'parametres' && (
           <div className="bg-white/95 p-6 rounded-3xl shadow-xl text-center space-y-6">
-            <div className="bg-orange-50 p-4 rounded-2xl border-2 border-orange-200">
-                <p className="text-sm font-black text-orange-700 mb-3 uppercase">Alertes en direct</p>
+            <div className="bg-orange-50 p-4 rounded-2xl border-2 border-orange-200 space-y-3">
+                <p className="text-sm font-black text-orange-700 uppercase">Alertes en direct</p>
                 <button onClick={subscribeToPush} disabled={pushLoading} className="w-full bg-orange-500 text-white p-4 rounded-xl font-black uppercase flex items-center justify-center gap-2 shadow-lg active:scale-95">
                   <Bell size={24}/> {pushLoading ? 'Activation...' : 'Activer les alertes'}
                 </button>
-                <p className="text-[9px] font-bold text-orange-600 mt-2 italic">Obligatoire pour recevoir les notifications</p>
+                <button onClick={() => nav('aide')} className="w-full bg-white border-2 border-orange-500 text-orange-500 p-2 rounded-xl font-black uppercase text-xs flex items-center justify-center gap-2">
+                  <Info size={16}/> Mode d'emploi
+                </button>
             </div>
             <div className="py-2 border-t border-gray-100">
               <p className="font-black text-lg text-gray-700 uppercase">{currentUser?.nom}</p>
               <p className="font-bold text-[#4A86B4]">{currentUser?.telephone}</p>
             </div>
             <button onClick={() => {localStorage.removeItem('user_boisset'); window.location.reload();}} className="w-full border-2 border-red-500 text-red-500 p-2 rounded-xl font-black uppercase text-xs">Déconnexion</button>
-            <p className="text-[10px] font-bold text-gray-300 uppercase tracking-widest tracking-tighter">Version {VERSION}</p>
+            <p className="text-[10px] font-bold text-gray-300 uppercase">Version {VERSION}</p>
           </div>
         )}
       </main>
 
       {currentUser && (
         <nav className="fixed bottom-0 w-full bg-white/90 backdrop-blur-md border-t-8 border-[#4A86B4] flex justify-around p-2 z-30 shadow-2xl">
-          <button onClick={() => nav('trajets')} className="flex flex-col items-center font-black text-[10px] text-gray-400 uppercase"><Car size={32} /> Accueil</button>
-          <button onClick={() => nav('messages')} className="flex flex-col items-center font-black text-[10px] text-gray-400 uppercase"><MessageCircle size={32} /> Messages</button>
-          <button onClick={() => nav('parametres')} className="flex flex-col items-center font-black text-[10px] text-gray-400 uppercase"><ShieldCheck size={32} /> Réglages</button>
+          <button onClick={() => nav('trajets')} className={`flex flex-col items-center font-black text-[10px] uppercase ${view === 'trajets' ? 'text-[#4A86B4]' : 'text-gray-400'}`}><Car size={32} /> Accueil</button>
+          <button onClick={() => nav('messages')} className={`flex flex-col items-center font-black text-[10px] uppercase ${view === 'messages' ? 'text-[#4A86B4]' : 'text-gray-400'}`}><MessageCircle size={32} /> Messages</button>
+          <button onClick={() => nav('parametres')} className={`flex flex-col items-center font-black text-[10px] uppercase ${view === 'parametres' ? 'text-[#4A86B4]' : 'text-gray-400'}`}><ShieldCheck size={32} /> Réglages</button>
         </nav>
       )}
     </div>
