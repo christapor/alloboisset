@@ -31,7 +31,7 @@ export default function App() {
   const messagesEndRef = useRef(null);
   const { subscribeToPush, loading: pushLoading } = usePushNotifications();
 
-  const VERSION = "1.64 - FORCE UPDATE"; 
+  const VERSION = "1.65"; 
 
   const nav = (newView) => {
     if (newView !== view) {
@@ -41,33 +41,21 @@ export default function App() {
   };
   
   const contacterEtNotifier = async (trajet) => {
-    // ALERT DE DEBUG POUR ÊTRE SÛR QUE LE CODE TOURNE
-    alert("Debug: Lancement de la procédure de notification...");
-    console.log("🚀 Début du script de contact");
-    
     try {
-      console.log("📡 Envoi à Supabase pour l'utilisateur:", trajet.driver_id);
-      const { data, error } = await supabase.functions.invoke('notify-message', {
+      // On envoie la notification sans bloquer l'utilisateur
+      supabase.functions.invoke('notify-message', {
         body: {
           userIdToNotify: trajet.driver_id,
           title: `📞 Appel de ${currentUser.nom}`,
-          body: `Besoin d'un trajet pour ${trajet.destination} !`,
+          body: `Pour le trajet : ${trajet.origin} ➔ ${trajet.destination}`,
           url: '/' 
         }
       });
-
-      if (error) console.error("❌ Erreur retournée par Supabase:", error);
-      else console.log("✅ Réponse Supabase:", data);
-
     } catch (err) {
-      console.error("💥 Crash pendant l'appel function:", err);
+      console.error("Erreur notif:", err);
     }
-
-    // On attend 1 seconde pour laisser le temps à la requête de partir
-    setTimeout(() => {
-      console.log("☎️ Exécution du lien TEL");
-      window.location.href = `tel:${trajet.driver_id}`;
-    }, 1000);
+    // Lancement de l'appel
+    window.location.href = `tel:${trajet.driver_id}`;
   };
 
   useEffect(() => {
@@ -105,9 +93,16 @@ export default function App() {
     if (data) setMessages(data);
   };
 
+  const envoyerMessage = async (e) => {
+    if (e) e.preventDefault();
+    if (!nouveauMessage.trim()) return;
+    const { error } = await supabase.from('village_messages').insert([{ sender_name: currentUser.nom, text: nouveauMessage.trim() }]);
+    if (!error) { setNouveauMessage(''); chargerMessages(); }
+  };
+
   const handleLogin = async (e) => {
     if (e) e.preventDefault();
-    if (!acceptCGU) return alert("Validez les CGU.");
+    if (!acceptCGU) return alert("Veuillez accepter les conditions.");
     const user = { nom: loginPrenom.trim(), telephone: loginTel, pin: loginPin };
     setCurrentUser(user);
     localStorage.setItem('user_boisset', JSON.stringify(user));
@@ -116,62 +111,99 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-fixed bg-cover font-sans flex flex-col select-none" style={{ backgroundImage: "linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), url('/alloboisset_fond.jpg')", backgroundPosition: 'center top' }}>
-      <header className="bg-white/90 shadow-xl p-3 sticky top-0 z-20 border-b-8 border-[#4A86B4] flex flex-col items-center">
+      <header className="bg-white/90 shadow-xl p-3 sticky top-0 z-20 border-b-8 border-[#4A86B4] flex flex-col items-center backdrop-blur-sm">
         <div className="flex items-center gap-5 w-full justify-between px-4">
-          <img src="/blason.png" className="h-10 w-10" alt="L" />
-          <h1 className="text-xl font-black text-[#4A86B4] uppercase">AlloBoisset <span className="text-[10px] text-red-500">v{VERSION}</span></h1>
-          <button onClick={() => navigator.share({url: window.location.href})} className="text-[#4A86B4] p-2"><Share2 size={24}/></button>
+          <img src="/blason.png" className="h-10 w-10 object-contain" alt="Logo" />
+          <div className="flex flex-col text-center">
+            <h1 className="text-xl font-black text-[#4A86B4] uppercase tracking-tighter">AlloBoisset</h1>
+            <p className="text-[9px] font-black text-[#5B8C4E] uppercase border-t-2 border-[#5B8C4E] pt-1">Covoiturage Villageois</p>
+          </div>
+          <button onClick={() => navigator.share({url: window.location.href})} className="text-[#4A86B4] p-2 rounded-full"><Share2 size={24}/></button>
         </div>
       </header>
 
-      <main className="flex-1 max-w-xl mx-auto w-full p-3 pb-32">
+      <main className="flex-1 max-w-xl mx-auto w-full p-3 pb-32 flex flex-col">
         {view === 'login' && (
-          <form onSubmit={handleLogin} className="bg-white/95 p-6 rounded-3xl space-y-4 text-center">
-            <h2 className="text-xl font-black uppercase">Identification</h2>
-            <input type="text" placeholder="PRÉNOM" value={loginPrenom} onChange={(e)=>setLoginPrenom(e.target.value)} required className="w-full p-4 rounded-xl border-4 border-gray-100" />
-            <input type="tel" placeholder="TÉLÉPHONE" value={loginTel} onChange={(e)=>setLoginTel(e.target.value)} required className="w-full p-4 rounded-xl border-4 border-gray-100" />
-            <input type="password" placeholder="CODE PIN" value={loginPin} onChange={(e)=>setLoginPin(e.target.value)} required className="w-full p-4 rounded-xl border-4 border-orange-200 text-center" />
-            <label className="flex items-center gap-3 p-2 cursor-pointer"><input type="checkbox" checked={acceptCGU} onChange={(e)=>setAcceptCGU(e.target.checked)} /><span className="text-[10px] font-bold">J'ACCEPTE LES CGU</span></label>
-            <button type="submit" className="w-full p-4 bg-[#4A86B4] text-white rounded-xl text-xl font-black uppercase">Entrer</button>
+          <form onSubmit={handleLogin} className="bg-white/95 p-6 rounded-3xl shadow-xl mt-2 border-2 border-[#4A86B4] space-y-4 text-center">
+            <h2 className="text-xl font-black uppercase italic">Identification</h2>
+            <input type="text" placeholder="PRÉNOM" value={loginPrenom} onChange={(e)=>setLoginPrenom(e.target.value)} required className="w-full p-4 text-lg rounded-xl border-4 border-gray-100 font-bold" />
+            <input type="tel" placeholder="TÉLÉPHONE" value={loginTel} onChange={(e)=>setLoginTel(e.target.value)} required className="w-full p-4 text-lg rounded-xl border-4 border-gray-100 font-bold" />
+            <input type="password" placeholder="CODE PIN" value={loginPin} onChange={(e)=>setLoginPin(e.target.value)} required className="w-full p-4 text-lg rounded-xl border-4 border-orange-200 font-bold text-center" />
+            <label className="flex items-center gap-3 cursor-pointer p-2 bg-orange-50 rounded-xl">
+              <input type="checkbox" checked={acceptCGU} onChange={(e)=>setAcceptCGU(e.target.checked)} />
+              <span className="text-[10px] font-black uppercase text-gray-800">J'accepte les conditions d'utilisation</span>
+            </label>
+            <button type="submit" className="w-full p-4 bg-[#4A86B4] text-white rounded-xl text-xl font-black uppercase shadow-lg">Entrer</button>
           </form>
         )}
 
         {view === 'trajets' && (
-          <div className="space-y-4">
-             <div className="flex justify-center"><span className="bg-white/90 px-5 py-1 rounded-full font-black text-[#4A86B4]">Bonjour {currentUser?.nom}</span></div>
-             <button onClick={() => nav('liste_offres')} className="w-full p-6 bg-[#4A86B4] text-white rounded-3xl font-black text-xl uppercase">🚗 Je vous emmène</button>
-             <button onClick={() => nav('liste_demandes')} className="w-full p-6 bg-[#8E44AD] text-white rounded-3xl font-black text-xl uppercase">🙋 Emmenez-moi</button>
-             <div className="grid grid-cols-2 gap-3">
-                <button onClick={() => {setIsDemande(false); setEditId(null); nav('nouveau');}} className="p-4 bg-[#5B8C4E] text-white rounded-2xl font-black uppercase"><Plus/> Proposer</button>
-                <button onClick={() => {setIsDemande(true); setEditId(null); nav('nouveau');}} className="p-4 bg-[#E67E22] text-white rounded-2xl font-black uppercase"><HelpCircle/> Demander</button>
-             </div>
+          <div className="flex-1 flex flex-col gap-4">
+            <div className="flex justify-center mt-1"><span className="bg-white/90 px-5 py-1.5 rounded-full font-black text-[#4A86B4] border-2 border-[#4A86B4]">Bonjour {currentUser?.nom}</span></div>
+            <button onClick={() => {chargerTrajets(); nav('liste_offres');}} className="p-6 rounded-[2rem] shadow-lg bg-[#4A86B4] text-white font-black text-xl uppercase flex flex-col items-center gap-2"><Car size={40} />Je vous emmène</button>
+            <button onClick={() => {chargerTrajets(); nav('liste_demandes');}} className="p-6 rounded-[2rem] shadow-lg bg-[#8E44AD] text-white font-black text-xl uppercase flex flex-col items-center gap-2"><Users size={40} />Emmenez-moi</button>
+            <div className="grid grid-cols-2 gap-3">
+              <button onClick={() => {setIsDemande(false); setEditId(null); nav('nouveau');}} className="p-4 rounded-2xl shadow-lg bg-[#5B8C4E] text-white font-black uppercase flex flex-col items-center"><Plus size={30} />Proposer</button>
+              <button onClick={() => {setIsDemande(true); setEditId(null); nav('nouveau');}} className="p-4 rounded-2xl shadow-lg bg-[#E67E22] text-white font-black uppercase flex flex-col items-center"><HelpCircle size={30} />Demander</button>
+            </div>
           </div>
         )}
 
         {(view === 'liste_offres' || view === 'liste_demandes') && (
           <div className="space-y-4">
-            <button onClick={() => nav('trajets')} className="bg-white border-4 border-[#4A86B4] text-[#4A86B4] px-4 py-2 rounded-xl font-black flex items-center gap-2"><ArrowLeft size={24} /> RETOUR</button>
+            <button onClick={() => nav('trajets')} className="bg-white border-4 border-[#4A86B4] text-[#4A86B4] px-4 py-2 rounded-xl font-black flex items-center gap-2 shadow-xl"><ArrowLeft size={24} /> RETOUR</button>
             {trajets.filter(t => view === 'liste_offres' ? !t.driver_name.includes('🙋') : t.driver_name.includes('🙋')).map(t => (
               <div key={t.id} className="bg-white/95 p-5 rounded-[2rem] shadow-md border-l-8 border-[#4A86B4]">
-                <p className="font-black text-xl uppercase">{t.origin} ➔ {t.destination}</p>
+                <p className="font-black text-xl uppercase leading-none">{t.origin} ➔ {t.destination}</p>
                 <p className="text-sm text-gray-500 font-bold mb-4">{t.departure_time} - {t.driver_name}</p>
-                {/* BOUTON MODIFIÉ POUR TEST : COULEUR ORANGE SI C'EST LE NOUVEAU CODE */}
-                <button 
-                  onClick={() => contacterEtNotifier(t)} 
-                  className="w-full bg-orange-600 text-white p-4 rounded-2xl font-black uppercase flex items-center justify-center gap-2 shadow-lg active:scale-95"
-                >
-                  <Phone size={24}/> TEST NOTIF + APPEL
-                </button>
+                <button onClick={() => contacterEtNotifier(t)} className="w-full bg-[#4A86B4] text-white p-4 rounded-2xl font-black uppercase flex items-center justify-center gap-2 shadow-lg"><Phone size={24}/> Contacter</button>
               </div>
             ))}
+          </div>
+        )}
+
+        {view === 'messages' && (
+          <div className="flex flex-col h-[70vh] bg-white/90 rounded-3xl p-4 shadow-xl border-2 border-[#4A86B4]">
+             <button onClick={() => nav('trajets')} className="mb-2 text-[#4A86B4] font-black flex items-center gap-1"><ArrowLeft size={18}/> RETOUR</button>
+             <div className="flex-1 overflow-y-auto space-y-2 pr-2">
+                {messages.slice().reverse().map(m => (
+                    <div key={m.id} className="p-3 bg-gray-50 rounded-2xl border-l-4 border-gray-300">
+                        <p className="text-[10px] font-black text-gray-500 uppercase">{m.sender_name}</p>
+                        <p className="text-sm font-bold leading-tight">{m.text}</p>
+                    </div>
+                ))}
+             </div>
+             <form onSubmit={envoyerMessage} className="mt-3 flex gap-2">
+                <input value={nouveauMessage} onChange={(e)=>setNouveauMessage(e.target.value)} className="flex-1 p-3 border-2 border-[#4A86B4] rounded-xl font-bold" placeholder="Message au village..." />
+                <button type="submit" className="bg-[#4A86B4] text-white p-3 rounded-xl shadow-md"><Send size={20}/></button>
+             </form>
+          </div>
+        )}
+
+        {view === 'parametres' && (
+          <div className="bg-white/95 p-6 rounded-3xl shadow-xl text-center space-y-6">
+            <div className="bg-orange-50 p-4 rounded-2xl border-2 border-orange-200">
+                <p className="text-sm font-black text-orange-700 mb-3 uppercase">Alertes en direct</p>
+                <button onClick={subscribeToPush} disabled={pushLoading} className="w-full bg-orange-500 text-white p-4 rounded-xl font-black uppercase flex items-center justify-center gap-2 shadow-lg active:scale-95">
+                  <Bell size={24}/> {pushLoading ? 'Activation...' : 'Activer les alertes'}
+                </button>
+                <p className="text-[9px] font-bold text-orange-600 mt-2 italic">Obligatoire pour recevoir les notifications</p>
+            </div>
+            <div className="py-2 border-t border-gray-100">
+              <p className="font-black text-lg text-gray-700 uppercase">{currentUser?.nom}</p>
+              <p className="font-bold text-[#4A86B4]">{currentUser?.telephone}</p>
+            </div>
+            <button onClick={() => {localStorage.removeItem('user_boisset'); window.location.reload();}} className="w-full border-2 border-red-500 text-red-500 p-2 rounded-xl font-black uppercase text-xs">Déconnexion</button>
+            <p className="text-[10px] font-bold text-gray-300 uppercase tracking-widest tracking-tighter">Version {VERSION}</p>
           </div>
         )}
       </main>
 
       {currentUser && (
-        <nav className="fixed bottom-0 w-full bg-white/90 border-t-8 border-[#4A86B4] flex justify-around p-2 z-30">
-          <button onClick={() => nav('trajets')} className="flex flex-col items-center font-black text-[10px] text-gray-400"><Car size={32} /> ACCUEIL</button>
-          <button onClick={() => nav('parametres')} className="flex flex-col items-center font-black text-[10px] text-gray-400"><ShieldCheck size={32} /> RÉGLAGES</button>
+        <nav className="fixed bottom-0 w-full bg-white/90 backdrop-blur-md border-t-8 border-[#4A86B4] flex justify-around p-2 z-30 shadow-2xl">
+          <button onClick={() => nav('trajets')} className="flex flex-col items-center font-black text-[10px] text-gray-400 uppercase"><Car size={32} /> Accueil</button>
+          <button onClick={() => nav('messages')} className="flex flex-col items-center font-black text-[10px] text-gray-400 uppercase"><MessageCircle size={32} /> Messages</button>
+          <button onClick={() => nav('parametres')} className="flex flex-col items-center font-black text-[10px] text-gray-400 uppercase"><ShieldCheck size={32} /> Réglages</button>
         </nav>
       )}
     </div>
