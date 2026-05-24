@@ -10,7 +10,19 @@ import { usePushNotifications } from './hooks/usePushNotifications';
 
 export default function App() {
   const [currentUser, setCurrentUser] = useState(null);
-  const [view, setView] = useState('login'); 
+
+  // Détection IMMEDIATE de la notification avant le premier rendu
+  const params = new URLSearchParams(window.location.search);
+  const urlView = params.get('view');
+  
+  // Si le paramètre view=messages est là et qu'on est connecté, on ouvre le mur direct
+  const [view, setView] = useState(() => {
+    if (urlView === 'messages' && localStorage.getItem('user_boisset')) {
+      return 'messages';
+    }
+    return localStorage.getItem('user_boisset') ? 'trajets' : 'login';
+  });
+
   const [loginPrenom, setLoginPrenom] = useState('');
   const [loginNomFamille, setLoginNomFamille] = useState('');
   const [loginTel, setLoginTel] = useState(localStorage.getItem('last_tel') || '');
