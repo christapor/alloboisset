@@ -80,9 +80,11 @@ export default function App() {
         const user = JSON.parse(savedUser);
         setCurrentUser(user); 
         
-        // Si le paramètre d'URL cible le mur, on l'affiche directement, sinon direction l'accueil
+        // Le setTimeout force le verrouillage sur le mur après initialisation de l'App
         if (urlView === 'messages') {
-          setView('messages');
+          setTimeout(() => {
+            setView('messages');
+          }, 100);
         } else {
           setView('trajets');
         }
@@ -264,3 +266,42 @@ export default function App() {
                 <button type="submit" className="bg-[#4A86B4] text-white p-3 rounded-xl shadow-md"><Send size={20}/></button>
              </form>
           </div>
+        )}
+
+        {view === 'aide' && (
+          <div className="flex-1 flex flex-col gap-4">
+            <button onClick={() => nav('parametres')} className="bg-white border-4 border-[#4A86B4] text-[#4A86B4] px-4 py-2 rounded-xl font-black flex items-center gap-2 w-fit"><ArrowLeft size={24} /> RETOUR</button>
+            <div className="bg-white/95 p-6 rounded-3xl shadow-xl space-y-4">
+              <h2 className="text-xl font-black uppercase text-[#4A86B4] border-b-4 border-[#4A86B4] pb-2 italic text-center">Mode d'emploi</h2>
+              <div className="space-y-4 text-xs font-bold text-gray-700">
+                <div className="bg-blue-50 p-4 rounded-2xl border-2 border-blue-200"><p className="font-black text-blue-800 mb-2 uppercase">Android</p><p>Installer via Chrome (3 points > Installer). Autoriser les notifs dans les réglages du tél.</p></div>
+                <div className="bg-purple-50 p-4 rounded-2xl border-2 border-purple-200"><p className="font-black text-purple-800 mb-2 uppercase">iPhone</p><p>Installer via Safari (Partager > Sur l'écran d'accueil). Activer les alertes dans les réglages de l'iPhone.</p></div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {view === 'parametres' && (
+          <div className="bg-white/95 p-6 rounded-3xl shadow-xl text-center space-y-6">
+            <div className="bg-orange-50 p-4 rounded-2xl border-2 border-orange-200 space-y-3">
+                <p className="text-sm font-black text-orange-700 uppercase">Alertes en direct</p>
+                <button onClick={subscribeToPush} disabled={pushLoading} className="w-full bg-orange-500 text-white p-4 rounded-xl font-black uppercase flex items-center justify-center gap-2 shadow-lg active:scale-95"><Bell size={24}/> {pushLoading ? 'Activation...' : 'Activer les alertes'}</button>
+                <button onClick={() => nav('aide')} className="w-full bg-white border-2 border-orange-500 text-orange-500 p-2 rounded-xl font-black uppercase text-xs flex items-center justify-center gap-2"><Info size={16}/> Mode d'emploi</button>
+            </div>
+            <div className="py-2 border-t border-gray-100"><p className="font-black text-lg text-gray-700 uppercase">{currentUser?.nom}</p><p className="font-bold text-[#4A86B4]">{currentUser?.telephone}</p></div>
+            <button onClick={() => {localStorage.removeItem('user_boisset'); window.location.reload();}} className="w-full border-2 border-red-500 text-red-500 p-2 rounded-xl font-black uppercase text-xs">Déconnexion</button>
+            <p className="text-[10px] font-bold text-gray-300 uppercase italic">Version {VERSION}</p>
+          </div>
+        )}
+      </main>
+
+      {currentUser && (
+        <nav className="fixed bottom-0 w-full bg-white/90 backdrop-blur-md border-t-8 border-[#4A86B4] flex justify-around p-2 z-30 shadow-2xl">
+          <button onClick={() => nav('trajets')} className={`flex flex-col items-center font-black text-[10px] uppercase ${['trajets', 'liste_offres', 'liste_demandes', 'nouveau'].includes(view) ? 'text-[#4A86B4]' : 'text-gray-400'}`}><Car size={32} /> Accueil</button>
+          <button onClick={() => nav('messages')} className={`flex flex-col items-center font-black text-[10px] uppercase ${view === 'messages' ? 'text-[#4A86B4]' : 'text-gray-400'}`}><MessageCircle size={32} /> Messages</button>
+          <button onClick={() => nav('parametres')} className={`flex flex-col items-center font-black text-[10px] uppercase ${['parametres', 'aide'].includes(view) ? 'text-[#4A86B4]' : 'text-gray-400'}`}><ShieldCheck size={32} /> Réglages</button>
+        </nav>
+      )}
+    </div>
+  );
+}
