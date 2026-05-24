@@ -11,11 +11,10 @@ import { usePushNotifications } from './hooks/usePushNotifications';
 export default function App() {
   const [currentUser, setCurrentUser] = useState(null);
 
-  // Détection IMMEDIATE de la notification avant le premier rendu
+  // 1. Détection IMMÉDIATE de la notification avant le tout premier rendu de l'écran
   const params = new URLSearchParams(window.location.search);
   const urlView = params.get('view');
   
-  // Si le paramètre view=messages est là et qu'on est connecté, on ouvre le mur direct
   const [view, setView] = useState(() => {
     if (urlView === 'messages' && localStorage.getItem('user_boisset')) {
       return 'messages';
@@ -75,16 +74,12 @@ export default function App() {
     window.location.href = `tel:${trajet.driver_id}`;
   };
 
-  // Gestion du démarrage et de la détection de l'URL des notifications
+  // 2. Gestion du démarrage, restauration utilisateur et verrouillage de la vue
   useEffect(() => {
     const handlePopState = (event) => {
       if (event.state && event.state.view) setView(event.state.view);
     };
     window.addEventListener('popstate', handlePopState);
-    
-    // Extraction des paramètres de l'URL (?view=messages)
-    const params = new URLSearchParams(window.location.search);
-    const urlView = params.get('view');
 
     const savedUser = localStorage.getItem('user_boisset');
     if (savedUser) { 
@@ -92,11 +87,11 @@ export default function App() {
         const user = JSON.parse(savedUser);
         setCurrentUser(user); 
         
-        // Le setTimeout force le verrouillage sur le mur après initialisation de l'App
+        // SÉCURITÉ VERROU : Si l'URL demandait les messages, on force la vue après le chargement de l'user
         if (urlView === 'messages') {
-          setTimeout(() => {
-            setView('messages');
-          }, 100);
+          setView('messages');
+          // Nettoyage de l'URL pour éviter les boucles étranges si l'utilisateur rafraîchit manuellement
+          window.history.replaceState({ view: 'messages' }, '', window.location.pathname);
         } else {
           setView('trajets');
         }
@@ -201,7 +196,7 @@ export default function App() {
             <input type="password" inputMode="numeric" maxLength="4" placeholder="CODE PIN (4 CHIFFRES)" value={loginPin} onChange={(e)=>setLoginPin(e.target.value.replace(/\D/g,''))} required className="w-full p-4 text-lg rounded-xl border-4 border-orange-200 font-bold text-center" />
             <label className="flex items-center gap-3 cursor-pointer p-2 bg-orange-50 rounded-xl text-left">
               <input type="checkbox" checked={acceptCGU} onChange={(e)=>setAcceptCGU(e.target.checked)} />
-              <span className="text-[10px] font-black uppercase text-gray-800">J'accepte les conditions</span>
+              <span className="text-[10px] font-black uppercase text-gray-800">J'acceptte les conditions</span>
             </label>
             <button type="submit" className="w-full p-4 bg-[#4A86B4] text-white rounded-xl text-xl font-black uppercase shadow-lg">Entrer</button>
             <div className="pt-2 border-t border-gray-100"><a href={MAILTO_PIN} className="text-sm font-black text-[#4A86B4] underline underline-offset-4 italic">PIN oublié ? Cliquez ici</a></div>
