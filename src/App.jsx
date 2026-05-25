@@ -161,11 +161,15 @@ export default function App() {
     nav('trajets');
   };
 
-  const publierTrajet = async () => {
+ const publierTrajet = async () => {
     if (!arrivee || !dateTrajet || !heureTrajet) return alert("Champs incomplets !");
     
     const prefixe = isDemande ? "🙋 " : "🚗 ";
     const typeAction = isDemande ? "cherche un trajet" : "propose un trajet";
+    
+    // Formatage rapide de la date pour la rendre plus sympa à lire (ex: 2026-05-28 -> 28/05)
+    const [annee, mois, jour] = dateTrajet.split('-');
+    const dateFormatee = `${jour}/${mois}`;
     
     const trajetData = {
       origin: depart, 
@@ -180,22 +184,21 @@ export default function App() {
       : await supabase.from('rides').insert([trajetData]);
 
     if (!error) { 
-      // 📢 S'il s'agit d'une NOUVELLE publication (pas une modification)
+      // 📢 Notification push générale au village si c'est un NOUVEAU trajet
       if (!editId) {
         try {
-          // On envoie un push général (broadcast: true) à tout le village
           await supabase.functions.invoke('notify-message', {
             body: { 
               broadcast: true, 
               title: isDemande ? `🙋 Demande de covoiturage` : `🚗 Nouvelle offre`,
-              body: `${currentUser.prenom || currentUser.nom} ${typeAction} : ${depart} ➔ ${arrivee.toUpperCase()}`,
-              url: 'https://alloboisset.fr/' // Renvoie sur l'accueil des trajets
+              // On intègre la date et l'heure directement dans le texte du message !
+              body: `${currentUser.nom} ${typeAction} : ${depart} ➔ ${arrivee.toUpperCase()} le ${dateFormatee} à ${heureTrajet}`,
+              url: 'https://alloboisset.fr/' 
             }
           });
         } catch (err) { console.error("Erreur envoi push trajet:", err); }
       }
 
-      // Nettoyage de l'écran et retour à l'accueil
       setArrivee(''); 
       setEditId(null); 
       chargerTrajets(); 
@@ -204,7 +207,6 @@ export default function App() {
       alert("Erreur lors de la publication.");
     }
   };
-
   return (
     <div className="min-h-screen bg-fixed bg-cover font-sans flex flex-col select-none" style={{ backgroundImage: "linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), url('/alloboisset_fond.jpg')", backgroundPosition: 'center top' }}>
       
