@@ -163,13 +163,46 @@ export default function App() {
 
   const publierTrajet = async () => {
     if (!arrivee || !dateTrajet || !heureTrajet) return alert("Champs incomplets !");
+    
     const prefixe = isDemande ? "🙋 " : "🚗 ";
+    const typeAction = isDemande ? "cherche un trajet" : "propose un trajet";
+    
     const trajetData = {
-      origin: depart, destination: arrivee, departure_time: `${dateTrajet} ${heureTrajet}`,
-      driver_id: String(currentUser.telephone), driver_name: prefixe + currentUser.nom
+      origin: depart, 
+      destination: arrivee, 
+      departure_time: `${dateTrajet} ${heureTrajet}`,
+      driver_id: String(currentUser.telephone), 
+      driver_name: prefixe + currentUser.nom
     };
-    const { error } = editId ? await supabase.from('rides').update(trajetData).eq('id', editId) : await supabase.from('rides').insert([trajetData]);
-    if (!error) { setArrivee(''); setEditId(null); chargerTrajets(); nav('trajets'); }
+
+    const { error } = editId 
+      ? await supabase.from('rides').update(trajetData).eq('id', editId) 
+      : await supabase.from('rides').insert([trajetData]);
+
+    if (!error) { 
+      // 📢 S'il s'agit d'une NOUVELLE publication (pas une modification)
+      if (!editId) {
+        try {
+          // On envoie un push général (broadcast: true) à tout le village
+          await supabase.functions.invoke('notify-message', {
+            body: { 
+              broadcast: true, 
+              title: isDemande ? `🙋 Demande de covoiturage` : `🚗 Nouvelle offre`,
+              body: `${currentUser.prenom || currentUser.nom} ${typeAction} : ${depart} ➔ ${arrivee.toUpperCase()}`,
+              url: 'https://alloboisset.fr/' // Renvoie sur l'accueil des trajets
+            }
+          });
+        } catch (err) { console.error("Erreur envoi push trajet:", err); }
+      }
+
+      // Nettoyage de l'écran et retour à l'accueil
+      setArrivee(''); 
+      setEditId(null); 
+      chargerTrajets(); 
+      nav('trajets'); 
+    } else {
+      alert("Erreur lors de la publication.");
+    }
   };
 
   return (
