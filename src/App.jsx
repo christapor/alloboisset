@@ -42,7 +42,7 @@ export default function App() {
   const messagesEndRef = useRef(null);
   const { subscribeToPush, loading: pushLoading } = usePushNotifications();
 
-  const VERSION = "1.73"; 
+  const VERSION = "2.0 Gold";
   const LISTE_ADMINS = ["0660419226", "0619872263"]; 
   const EMAIL_ADMIN = "christapor@gmail.com";
   const MAILTO_PIN = `mailto:${EMAIL_ADMIN}?subject=AlloBoisset%20:%20Code%20PIN%20oubli%C3%A9&body=Bonjour%20Chris,%0D%0A%0D%0AJ'ai%20oubli%C3%A9%20mon%20code%20PIN.%20Mon%20num%C3%A9ro%20est%20le%20:`;
