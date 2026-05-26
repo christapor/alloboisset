@@ -47,9 +47,10 @@ export default function App() {
   const EMAIL_ADMIN = "christapor@gmail.com";
   const MAILTO_PIN = `mailto:${EMAIL_ADMIN}?subject=AlloBoisset%20:%20Code%20PIN%20oubli%C3%A9&body=Bonjour%20Chris,%0D%0A%0D%0AJ'ai%20oubli%C3%A9%20mon%20code%20PIN.%20Mon%20num%C3%A9ro%20est%20le%20:`;
 
-  const nav = (newView) => {
+ const nav = (newView) => {
     if (newView !== view) {
-      window.history.pushState({ view: newView }, '', '');
+      // On donne une vraie URL propre (?view=nouveau, etc.) pour que le navigateur réagisse au quart de tour !
+      window.history.pushState({ view: newView }, '', `?view=${newView}`);
       setView(newView);
     }
   };
