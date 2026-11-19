@@ -271,7 +271,7 @@ useEffect(() => {
 
         {view === 'nouveau' && (
           <div className="flex flex-col gap-4">
-            <button onClick={() => nav('trajets')} className="bg-white border-4 border-[#4A86B4] text-[#4A86B4] px-4 py-2 rounded-xl font-black flex items-center gap-2 w-fit"><ArrowLeft size={24} /> RETOUR</button>
+            <button onClick={() => goBack('trajets')} className="bg-white border-4 border-[#4A86B4] text-[#4A86B4] px-4 py-2 rounded-xl font-black flex items-center gap-2 w-fit"><ArrowLeft size={24} /> RETOUR</button>
             <div className={`bg-white/95 p-6 rounded-3xl shadow-lg space-y-4 border-4 ${isDemande ? 'border-[#E67E22]' : 'border-[#5B8C4E]'}`}>
               <h2 className="text-xl font-black text-center uppercase">{editId ? 'Modifier' : (isDemande ? 'Je cherche' : 'Je propose')}</h2>
               <input type="text" placeholder="DÉPART" value={depart} onChange={(e)=>setDepart(e.target.value)} className="w-full p-4 border-2 rounded-xl font-bold" />
@@ -287,7 +287,7 @@ useEffect(() => {
 
         {(view === 'liste_offres' || view === 'liste_demandes') && (
           <div className="space-y-4">
-            <button onClick={() => nav('trajets')} className="bg-white border-4 border-[#4A86B4] text-[#4A86B4] px-4 py-2 rounded-xl font-black flex items-center gap-2 shadow-xl"><ArrowLeft size={24} /> RETOUR</button>
+            <button onClick={() => goBack('trajets')} className="bg-white border-4 border-[#4A86B4] text-[#4A86B4] px-4 py-2 rounded-xl font-black flex items-center gap-2 shadow-xl"><ArrowLeft size={24} /> RETOUR</button>
             {trajets.filter(t => view === 'liste_offres' ? !t.driver_name.includes('🙋') : t.driver_name.includes('🙋')).map(t => (
               <div key={t.id} className="bg-white/95 p-5 rounded-[2rem] shadow-md border-l-8 border-[#4A86B4]">
                 <div className="flex justify-between items-start mb-2">
@@ -308,7 +308,7 @@ useEffect(() => {
 
         {view === 'messages' && (
           <div className="flex flex-col h-[70vh] bg-white/90 rounded-3xl p-4 shadow-xl border-2 border-[#4A86B4]">
-             <button onClick={() => nav('trajets')} className="mb-2 text-[#4A86B4] font-black flex items-center gap-1"><ArrowLeft size={18}/> RETOUR</button>
+             <button onClick={() => goBack('trajets')} className="mb-2 text-[#4A86B4] font-black flex items-center gap-1"><ArrowLeft size={18}/> RETOUR</button>
              <div className="flex-1 overflow-y-auto space-y-2 pr-2">
                 {messages.slice().reverse().map(m => (
                     <div key={m.id} className="p-3 bg-gray-50 rounded-2xl border-l-4 border-gray-300 relative">
@@ -331,7 +331,7 @@ useEffect(() => {
 
         {view === 'aide' && (
           <div className="flex-1 flex flex-col gap-4">
-            <button onClick={() => nav('parametres')} className="bg-white border-4 border-[#4A86B4] text-[#4A86B4] px-4 py-2 rounded-xl font-black flex items-center gap-2 w-fit"><ArrowLeft size={24} /> RETOUR</button>
+            <button onClick={() => goBack('parametres')} className="bg-white border-4 border-[#4A86B4] text-[#4A86B4] px-4 py-2 rounded-xl font-black flex items-center gap-2 w-fit"><ArrowLeft size={24} /> RETOUR</button>
             <div className="bg-white/95 p-6 rounded-3xl shadow-xl space-y-4">
               <h2 className="text-xl font-black uppercase text-[#4A86B4] border-b-4 border-[#4A86B4] pb-2 italic text-center">Mode d'emploi</h2>
               <div className="space-y-4 text-xs font-bold text-gray-700">
