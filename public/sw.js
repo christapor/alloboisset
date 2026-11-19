@@ -1,3 +1,12 @@
+// Force l'activation immédiate des mises à jour du Service Worker
+self.addEventListener('install', () => {
+  self.skipWaiting();
+});
+
+self.addEventListener('activate', (event) => {
+  event.waitUntil(clients.claim());
+});
+
 self.addEventListener('push', (event) => {
   console.log('☁️ Notification Push reçue !');
   
@@ -37,12 +46,11 @@ self.addEventListener('notificationclick', (event) => {
 
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
-      // Si l'application est déjà ouverte en arrière-plan, on change son URL et on la focus
-      for (const client of clientList) {
-        if ('navigate' in client) {
-          client.navigate(targetUrl);
-          return client.focus();
-        }
+      // On privilégie une fenêtre déjà ouverte sur le domaine officiel
+      const matchingClient = clientList.find(c => c.url.includes('alloboisset.fr')) || clientList[0];
+
+      if (matchingClient && 'navigate' in matchingClient) {
+        return matchingClient.navigate(targetUrl).then((client) => client?.focus());
       }
       // Si l'application était complètement fermée, on l'ouvre
       if (clients.openWindow) {
