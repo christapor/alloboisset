@@ -92,11 +92,10 @@ export const usePushNotifications = () => {
     setLoading(true);
 
     try {
-      if (!('Notification' in window)) {
-        throw new Error('Notifications non supportées par ce navigateur');
-      }
-
-      if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+      if (!('Notification' in window) || !('serviceWorker' in navigator) || !('PushManager' in window)) {
+        if (detectMobileSystem() === 'ios') {
+          throw new Error('Sur iPhone/iPad, installez d\'abord AlloBoisset sur l\'écran d\'accueil (bouton Partager > Sur l\'écran d\'accueil), puis ouvrez l\'icône pour activer les alertes.');
+        }
         throw new Error('Notifications non supportées par ce navigateur');
       }
 
