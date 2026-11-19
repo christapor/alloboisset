@@ -47,11 +47,20 @@ export default function App() {
   const EMAIL_ADMIN = "christapor@gmail.com";
   const MAILTO_PIN = `mailto:${EMAIL_ADMIN}?subject=AlloBoisset%20:%20Code%20PIN%20oubli%C3%A9&body=Bonjour%20Chris,%0D%0A%0D%0AJ'ai%20oubli%C3%A9%20mon%20code%20PIN.%20Mon%20num%C3%A9ro%20est%20le%20:`;
 
- const nav = (newView) => {
+const nav = (newView) => {
     if (newView !== view) {
-      // On donne une vraie URL propre (?view=nouveau, etc.) pour que le navigateur réagisse au quart de tour !
       window.history.pushState({ view: newView }, '', `?view=${newView}`);
       setView(newView);
+    }
+  };
+
+  // Remplace les onClick={() => nav('trajets')} des boutons "RETOUR" par onClick={goBack}
+  const goBack = (fallbackView = 'trajets') => {
+    if (window.history.state && window.history.length > 1) {
+      window.history.back();
+    } else {
+      window.history.replaceState({ view: fallbackView }, '', `?view=${fallbackView}`);
+      setView(fallbackView);
     }
   };
 
@@ -76,9 +85,16 @@ export default function App() {
   };
 
   // 2. Gestion du démarrage, restauration utilisateur et verrouillage de la vue
-  useEffect(() => {
+useEffect(() => {
     const handlePopState = (event) => {
-      if (event.state && event.state.view) setView(event.state.view);
+      if (event.state && event.state.view) {
+        setView(event.state.view);
+      } else {
+        // Si on retombe sur l'entrée racine sans state, on force l'accueil sans quitter
+        const fallback = localStorage.getItem('user_boisset') ? 'trajets' : 'login';
+        window.history.replaceState({ view: fallback }, '', `?view=${fallback}`);
+        setView(fallback);
+      }
     };
     window.addEventListener('popstate', handlePopState);
 
@@ -88,18 +104,20 @@ export default function App() {
         const user = JSON.parse(savedUser);
         setCurrentUser(user); 
         
-        // SÉCURITÉ VERROU : Si l'URL demandait les messages, on force la vue après le chargement de l'user
         if (urlView === 'messages') {
+          // On crée un socle 'trajets' en dessous pour que le bouton Retour ne ferme pas la PWA
+          window.history.replaceState({ view: 'trajets' }, '', '?view=trajets');
+          window.history.pushState({ view: 'messages' }, '', '?view=messages');
           setView('messages');
-          // Nettoyage de l'URL pour éviter les boucles étranges si l'utilisateur rafraîchit manuellement
-          window.history.replaceState({ view: 'messages' }, '', window.location.pathname);
         } else {
+          window.history.replaceState({ view: 'trajets' }, '', '?view=trajets');
           setView('trajets');
         }
         
         console.log("👤 Utilisateur chargé:", user.nom, "Admin:", estAdmin(user.telephone));
       } catch (e) { localStorage.removeItem('user_boisset'); }
-    } else if (urlView === 'messages') {
+    } else {
+      window.history.replaceState({ view: 'login' }, '', '?view=login');
       setView('login');
     }
 
