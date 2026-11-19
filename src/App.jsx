@@ -8,6 +8,43 @@ import {
 
 import { usePushNotifications } from './hooks/usePushNotifications';
 
+const GuideInstallation = ({ showReminder = false }) => (
+  <div className="space-y-4 text-xs font-bold text-gray-700 text-left">
+    <p className="text-center text-gray-600 italic">
+      AlloBoisset s'installe directement depuis votre navigateur en 10 secondes (sans passer par un store).
+    </p>
+
+    <div className="bg-blue-50 p-4 rounded-2xl border-2 border-blue-200 space-y-1">
+      <p className="font-black text-blue-800 uppercase">🤖 Téléphone Android (Chrome)</p>
+      <p>1. Ouvrez <strong>alloboisset.fr</strong> dans Google Chrome.</p>
+      <p>2. Appuyez sur les <strong>3 petits points (⋮)</strong> en haut à droite.</p>
+      <p>3. Appuyez sur <strong>« Ajouter à l'écran d'accueil »</strong> puis <strong>« Installer »</strong>.</p>
+      <p>4. <strong>Important :</strong> Ouvrez la nouvelle icône AlloBoisset sur votre écran d'accueil, puis allez dans <strong>Réglages ➔ Activer les alertes ➔ Autoriser</strong>.</p>
+    </div>
+
+    <div className="bg-purple-50 p-4 rounded-2xl border-2 border-purple-200 space-y-1">
+      <p className="font-black text-purple-800 uppercase">🍎 iPhone / iPad (Safari obligatoire)</p>
+      <p>1. Ouvrez <strong>alloboisset.fr</strong> dans <strong>Safari</strong> (ne fonctionne pas depuis Chrome).</p>
+      <p>2. Appuyez sur <strong>Partager</strong> (le carré avec une flèche vers le haut, en bas de l'écran).</p>
+      <p>3. Appuyez sur <strong>« Sur l'écran d'accueil »</strong> puis <strong>« Ajouter »</strong>.</p>
+      <p>4. <strong>Important :</strong> Ouvrez l'icône AlloBoisset depuis votre écran d'accueil, puis allez dans <strong>Réglages ➔ Activer les alertes ➔ Autoriser</strong>.</p>
+    </div>
+
+    <div className="bg-green-50 p-4 rounded-2xl border-2 border-green-200 space-y-1">
+      <p className="font-black text-green-800 uppercase">💻 Ordinateur (PC / Mac)</p>
+      <p>1. Ouvrez <strong>alloboisset.fr</strong> sur Chrome ou Edge.</p>
+      <p>2. Cliquez sur la petite icône <strong>Installer</strong> à droite de la barre d'adresse.</p>
+      <p>3. Une fois connecté, allez dans <strong>Réglages ➔ Activer les alertes ➔ Autoriser</strong>.</p>
+    </div>
+
+    {showReminder && (
+      <p className="text-center text-[11px] font-black text-orange-700 bg-orange-50 p-3 rounded-xl border border-orange-200">
+        💡 Étourdi(e) ? Vous retrouverez ce mode d'emploi à tout moment dans l'onglet « Réglages » en bas à droite !
+      </p>
+    )}
+  </div>
+);
+
 export default function App() {
   const [currentUser, setCurrentUser] = useState(null);
 
@@ -47,14 +84,13 @@ export default function App() {
   const EMAIL_ADMIN = "christapor@gmail.com";
   const MAILTO_PIN = `mailto:${EMAIL_ADMIN}?subject=AlloBoisset%20:%20Code%20PIN%20oubli%C3%A9&body=Bonjour%20Chris,%0D%0A%0D%0AJ'ai%20oubli%C3%A9%20mon%20code%20PIN.%20Mon%20num%C3%A9ro%20est%20le%20:`;
 
-const nav = (newView) => {
+  const nav = (newView) => {
     if (newView !== view) {
       window.history.pushState({ view: newView }, '', `?view=${newView}`);
       setView(newView);
     }
   };
 
-  // Remplace les onClick={() => nav('trajets')} des boutons "RETOUR" par onClick={goBack}
   const goBack = (fallbackView = 'trajets') => {
     if (window.history.state && window.history.length > 1) {
       window.history.back();
@@ -85,12 +121,11 @@ const nav = (newView) => {
   };
 
   // 2. Gestion du démarrage, restauration utilisateur et verrouillage de la vue
-useEffect(() => {
+  useEffect(() => {
     const handlePopState = (event) => {
       if (event.state && event.state.view) {
         setView(event.state.view);
       } else {
-        // Si on retombe sur l'entrée racine sans state, on force l'accueil sans quitter
         const fallback = localStorage.getItem('user_boisset') ? 'trajets' : 'login';
         window.history.replaceState({ view: fallback }, '', `?view=${fallback}`);
         setView(fallback);
@@ -105,7 +140,6 @@ useEffect(() => {
         setCurrentUser(user); 
         
         if (urlView === 'messages') {
-          // On crée un socle 'trajets' en dessous pour que le bouton Retour ne ferme pas la PWA
           window.history.replaceState({ view: 'trajets' }, '', '?view=trajets');
           window.history.pushState({ view: 'messages' }, '', '?view=messages');
           setView('messages');
@@ -180,13 +214,12 @@ useEffect(() => {
     nav('trajets');
   };
 
- const publierTrajet = async () => {
+  const publierTrajet = async () => {
     if (!arrivee || !dateTrajet || !heureTrajet) return alert("Champs incomplets !");
     
     const prefixe = isDemande ? "🙋 " : "🚗 ";
     const typeAction = isDemande ? "cherche un trajet" : "propose un trajet";
     
-    // Formatage rapide de la date pour la rendre plus sympa à lire (ex: 2026-05-28 -> 28/05)
     const [annee, mois, jour] = dateTrajet.split('-');
     const dateFormatee = `${jour}/${mois}`;
     
@@ -203,14 +236,12 @@ useEffect(() => {
       : await supabase.from('rides').insert([trajetData]);
 
     if (!error) { 
-      // 📢 Notification push générale au village si c'est un NOUVEAU trajet
       if (!editId) {
         try {
           await supabase.functions.invoke('notify-message', {
             body: { 
               broadcast: true, 
               title: isDemande ? `🙋 Demande de covoiturage` : `🚗 Nouvelle offre`,
-              // On intègre la date et l'heure directement dans le texte du message !
               body: `${currentUser.nom} ${typeAction} : ${depart} ➔ ${arrivee.toUpperCase()} le ${dateFormatee} à ${heureTrajet}`,
               url: 'https://alloboisset.fr/' 
             }
@@ -226,6 +257,7 @@ useEffect(() => {
       alert("Erreur lors de la publication.");
     }
   };
+
   return (
     <div className="min-h-screen bg-fixed bg-cover font-sans flex flex-col select-none" style={{ backgroundImage: "linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), url('/alloboisset_fond.jpg')", backgroundPosition: 'center top' }}>
       
@@ -250,21 +282,49 @@ useEffect(() => {
             <input type="password" inputMode="numeric" maxLength="4" placeholder="CODE PIN (4 CHIFFRES)" value={loginPin} onChange={(e)=>setLoginPin(e.target.value.replace(/\D/g,''))} required className="w-full p-4 text-lg rounded-xl border-4 border-orange-200 font-bold text-center" />
             <label className="flex items-center gap-3 cursor-pointer p-2 bg-orange-50 rounded-xl text-left">
               <input type="checkbox" checked={acceptCGU} onChange={(e)=>setAcceptCGU(e.target.checked)} />
-              <span className="text-[10px] font-black uppercase text-gray-800">J'acceptte les conditions</span>
+              <span className="text-[10px] font-black uppercase text-gray-800">J'accepte les conditions</span>
             </label>
             <button type="submit" className="w-full p-4 bg-[#4A86B4] text-white rounded-xl text-xl font-black uppercase shadow-lg">Entrer</button>
             <div className="pt-2 border-t border-gray-100"><a href={MAILTO_PIN} className="text-sm font-black text-[#4A86B4] underline underline-offset-4 italic">PIN oublié ? Cliquez ici</a></div>
+
+            <details className="pt-3 border-t border-gray-200 text-left">
+              <summary className="cursor-pointer text-xs font-black text-[#4A86B4] uppercase text-center list-none bg-blue-50 p-3 rounded-xl border border-blue-200">
+                📲 Mode d'emploi : Installer l'appli &amp; activer les alertes ▼
+              </summary>
+              <div className="mt-3">
+                <GuideInstallation showReminder={true} />
+              </div>
+            </details>
           </form>
         )}
 
         {view === 'trajets' && (
           <div className="flex-1 flex flex-col gap-4">
             <div className="flex justify-center mt-1"><span className="bg-white/90 px-5 py-1.5 rounded-full font-black text-[#4A86B4] border-2 border-[#4A86B4]">Bonjour {currentUser?.nom}</span></div>
-            <button onClick={() => nav('liste_offres')} className="p-6 rounded-[2rem] shadow-lg bg-[#4A86B4] text-white font-black text-xl uppercase flex flex-col items-center gap-2"><Car size={40} />Je vous emmène</button>
-            <button onClick={() => nav('liste_demandes')} className="p-6 rounded-[2rem] shadow-lg bg-[#8E44AD] text-white font-black text-xl uppercase flex flex-col items-center gap-2"><Users size={40} />Emmenez-moi</button>
+
+            <button onClick={() => nav('liste_offres')} className="p-5 rounded-[2rem] shadow-lg bg-[#4A86B4] text-white flex flex-col items-center gap-1 active:scale-95 transition">
+              <Car size={38} />
+              <span className="font-black text-xl uppercase leading-tight">Qui part bientôt ?</span>
+              <span className="text-xs font-bold opacity-90">Voir les conducteurs qui ont des places</span>
+            </button>
+
+            <button onClick={() => nav('liste_demandes')} className="p-5 rounded-[2rem] shadow-lg bg-[#8E44AD] text-white flex flex-col items-center gap-1 active:scale-95 transition">
+              <Users size={38} />
+              <span className="font-black text-xl uppercase leading-tight">Qui cherche un trajet ?</span>
+              <span className="text-xs font-bold opacity-90">Voir les voisins qui ont besoin d'aide</span>
+            </button>
+
             <div className="grid grid-cols-2 gap-3">
-              <button onClick={() => {setIsDemande(false); setEditId(null); nav('nouveau');}} className="p-4 rounded-2xl shadow-lg bg-[#5B8C4E] text-white font-black uppercase flex flex-col items-center"><Plus size={30} />Proposer</button>
-              <button onClick={() => {setIsDemande(true); setEditId(null); nav('nouveau');}} className="p-4 rounded-2xl shadow-lg bg-[#E67E22] text-white font-black uppercase flex flex-col items-center"><HelpCircle size={30} />Demander</button>
+              <button onClick={() => {setIsDemande(false); setEditId(null); nav('nouveau');}} className="p-4 rounded-2xl shadow-lg bg-[#5B8C4E] text-white flex flex-col items-center justify-center text-center gap-1 active:scale-95 transition">
+                <Plus size={28} />
+                <span className="font-black text-sm uppercase leading-tight">J'ai des places libres</span>
+                <span className="text-[10px] font-bold opacity-90 leading-tight">Proposer ma voiture</span>
+              </button>
+              <button onClick={() => {setIsDemande(true); setEditId(null); nav('nouveau');}} className="p-4 rounded-2xl shadow-lg bg-[#E67E22] text-white flex flex-col items-center justify-center text-center gap-1 active:scale-95 transition">
+                <HelpCircle size={28} />
+                <span className="font-black text-sm uppercase leading-tight">J'ai besoin d'un trajet</span>
+                <span className="text-[10px] font-bold opacity-90 leading-tight">Demander un covoiturage</span>
+              </button>
             </div>
           </div>
         )}
@@ -334,10 +394,7 @@ useEffect(() => {
             <button onClick={() => goBack('parametres')} className="bg-white border-4 border-[#4A86B4] text-[#4A86B4] px-4 py-2 rounded-xl font-black flex items-center gap-2 w-fit"><ArrowLeft size={24} /> RETOUR</button>
             <div className="bg-white/95 p-6 rounded-3xl shadow-xl space-y-4">
               <h2 className="text-xl font-black uppercase text-[#4A86B4] border-b-4 border-[#4A86B4] pb-2 italic text-center">Mode d'emploi</h2>
-              <div className="space-y-4 text-xs font-bold text-gray-700">
-                <div className="bg-blue-50 p-4 rounded-2xl border-2 border-blue-200"><p className="font-black text-blue-800 mb-2 uppercase">Android</p><p>Installer via Chrome (3 points > Installer). Autoriser les notifs dans les réglages du tél.</p></div>
-                <div className="bg-purple-50 p-4 rounded-2xl border-2 border-purple-200"><p className="font-black text-purple-800 mb-2 uppercase">iPhone</p><p>Installer via Safari (Partager > Sur l'écran d'accueil). Activer les alertes dans les réglages de l'iPhone.</p></div>
-              </div>
+              <GuideInstallation showReminder={false} />
             </div>
           </div>
         )}
