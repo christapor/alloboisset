@@ -3,7 +3,7 @@ import { supabase } from './lib/supabaseClient';
 import { 
   Car, User, MessageCircle, Plus, ArrowLeft, Trash2, Phone, 
   ShieldCheck, Users, Edit, HelpCircle, Share2, Send, Info, 
-  FileText, CheckCircle2, Bell, Smartphone 
+  FileText, CheckCircle2, Bell, Smartphone, Download, X 
 } from 'lucide-react';
 
 import { usePushNotifications } from './hooks/usePushNotifications';
@@ -68,6 +68,10 @@ export default function App() {
   const [messages, setMessages] = useState([]);
   const [nouveauMessage, setNouveauMessage] = useState('');
   const [confirmLogout, setConfirmLogout] = useState(false);
+
+  // États pour l'installation PWA (Android / iOS)
+  const [deferredPrompt, setDeferredPrompt] = useState(null);
+  const [showIosInstallHint, setShowIosInstallHint] = useState(false);
   
   const [isDemande, setIsDemande] = useState(false);
   const [editId, setEditId] = useState(null);
@@ -118,6 +122,44 @@ export default function App() {
       });
     } catch (err) { console.error(err); }
     window.location.href = `tel:${trajet.driver_id}`;
+  };
+
+  // Détection de l'installation PWA (Android Chrome & iPhone Safari)
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (e) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+    };
+
+    const handleAppInstalled = () => {
+      setDeferredPrompt(null);
+      setShowIosInstallHint(false);
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    window.addEventListener('appinstalled', handleAppInstalled);
+
+    const ua = window.navigator.userAgent || '';
+    const isIos = /iPad|iPhone|iPod/.test(ua) && !window.MSStream;
+    const isStandalone =
+      window.navigator.standalone === true ||
+      window.matchMedia('(display-mode: standalone)').matches;
+
+    if (isIos && !isStandalone) {
+      setShowIosInstallHint(true);
+    }
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      window.removeEventListener('appinstalled', handleAppInstalled);
+    };
+  }, []);
+
+  const lancerInstallationAndroid = async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    await deferredPrompt.userChoice;
+    setDeferredPrompt(null);
   };
 
   // 2. Gestion du démarrage, restauration utilisateur et verrouillage de la vue
@@ -270,6 +312,44 @@ export default function App() {
       </header>
 
       <main className="flex-1 max-w-xl mx-auto w-full p-3 pb-32 flex flex-col">
+        {deferredPrompt && (
+          <div className="bg-white/95 border-2 border-[#4A86B4] rounded-2xl p-3 mb-3 shadow-lg flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3 text-left">
+              <img src="/logo-192.png" alt="AlloBoisset" className="h-10 w-10 rounded-xl object-contain shrink-0" />
+              <div>
+                <p className="text-xs font-black uppercase text-[#4A86B4]">Installer AlloBoisset</p>
+                <p className="text-[11px] font-bold text-gray-600">Ajouter l'application sur l'écran d'accueil</p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={lancerInstallationAndroid}
+              className="bg-[#4A86B4] text-white px-4 py-2 rounded-xl font-black text-xs uppercase flex items-center gap-1.5 shadow active:scale-95 transition shrink-0"
+            >
+              <Download size={16} /> Installer
+            </button>
+          </div>
+        )}
+
+        {showIosInstallHint && !deferredPrompt && (
+          <div className="bg-purple-950/95 text-white border-2 border-purple-300 rounded-2xl p-3 mb-3 shadow-lg flex items-start justify-between gap-2 text-left">
+            <div className="flex items-start gap-2.5">
+              <img src="/apple-touch-icon.png" alt="AlloBoisset" className="h-9 w-9 rounded-lg object-contain shrink-0 mt-0.5" />
+              <p className="text-[11px] font-bold leading-snug">
+                Pour installer <strong>AlloBoisset</strong> sur iPhone : appuyez sur <strong>Partager</strong> (carré + flèche) puis <strong>« Sur l'écran d'accueil »</strong>.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowIosInstallHint(false)}
+              aria-label="Fermer"
+              className="text-purple-200 hover:text-white p-1 shrink-0"
+            >
+              <X size={16} />
+            </button>
+          </div>
+        )}
+
         {view === 'login' && (
           <form onSubmit={handleLogin} className="bg-white/95 p-6 rounded-3xl shadow-xl mt-2 border-2 border-[#4A86B4] space-y-4 text-center">
             <h2 className="text-xl font-black uppercase italic">Identification</h2>
