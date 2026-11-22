@@ -88,6 +88,43 @@ export const usePushNotifications = () => {
     return outputArray;
   };
 
+  const creerSouscriptionPropre = async (registration) => {
+    const subscribeOptions = {
+      userVisibleOnly: true,
+      applicationServerKey: urlBase64ToUint8Array(PUBLIC_VAPID_KEY)
+    };
+
+    // 1. Nettoyage préventif d'une éventuelle ancienne souscription
+    const existingSubscription = await registration.pushManager.getSubscription();
+    if (existingSubscription) {
+      try {
+        await existingSubscription.unsubscribe();
+      } catch (unsubErr) {
+        console.warn('Nettoyage ancienne souscription ignoré :', unsubErr);
+      }
+    }
+
+    // 2. Création d'une nouvelle souscription, avec deuxième tentative de secours si besoin
+    try {
+      return await registration.pushManager.subscribe(subscribeOptions);
+    } catch (firstErr) {
+      console.warn('Première tentative pushManager.subscribe échouée, nouvelle tentative :', firstErr);
+      const retryExisting = await registration.pushManager.getSubscription();
+      if (retryExisting) {
+        try {
+          await retryExisting.unsubscribe();
+        } catch (_) {}
+      }
+      try {
+        return await registration.pushManager.subscribe(subscribeOptions);
+      } catch (secondErr) {
+        throw new Error(
+          `${secondErr.message} — Astuce : si un VPN, filtre DNS ou Tailscale est actif, désactivez-le provisoirement puis réessayez.`
+        );
+      }
+    }
+  };
+
   const subscribeToPush = async () => {
     setLoading(true);
 
@@ -124,13 +161,7 @@ export const usePushNotifications = () => {
       }
       await navigator.serviceWorker.ready;
 
-      let subscription = await registration.pushManager.getSubscription();
-      if (!subscription) {
-        subscription = await registration.pushManager.subscribe({
-          userVisibleOnly: true,
-          applicationServerKey: urlBase64ToUint8Array(PUBLIC_VAPID_KEY)
-        });
-      }
+      const subscription = await creerSouscriptionPropre(registration);
 
       const savedUser = localStorage.getItem('user_boisset');
       if (!savedUser) throw new Error('Utilisateur non connecté sur AlloBoisset');
